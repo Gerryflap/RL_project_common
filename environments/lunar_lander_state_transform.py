@@ -29,6 +29,29 @@ def transform_state(x):
     out[5] = np.round(np.sqrt(np.abs(x[5])) * np.sign(x[5]),0)
     return tuple(out)
 
+def transform_state_rough(x):
+    if x.shape != (8,):
+        raise ValueError("Expected one-dimensional numpy array of shape (8,), got: %s"%(str(x.shape)))
+    x = x[:-2]
+    out = np.zeros((6,))
+
+    # Pos angle
+    out[0] = np.round((np.arctan2(x[0], x[1]))/(3*np.math.pi), 1)
+
+    # Pos distance
+    out[1] = np.round((np.sqrt(x[0]**2 + x[1]**2))**(1/3),1)
+
+    # Velocities
+    out[2] = np.round(np.sqrt(np.abs(x[2])) * np.sign(x[2]),0)
+    out[3] = np.round(np.sqrt(np.abs(x[3])) * np.sign(x[3]),0)
+
+    # Angle
+    out[4] = np.round(1.5*np.sqrt(np.abs(x[4])) * np.sign(x[4]),0)
+
+    # Anglular velocity
+    out[5] = np.round(0.75*np.sqrt(np.abs(x[5])) * np.sign(x[5]),0)
+    return tuple(out)
+
 if __name__ == "__main__":
 
 
