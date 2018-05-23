@@ -2,10 +2,10 @@ import gym
 import algorithms.sarsa_lambda as sl
 import environments.lunar_lander_state_transform as llt
 import numpy as np
-import threading
 import multiprocessing as mup
+import matplotlib
+matplotlib.use("agg")
 import matplotlib.pyplot as plt
-
 
 class ExperimentRunner(object):
     def __init__(self, episodes, lam=0.0, sigma=0.0):
@@ -39,7 +39,7 @@ if __name__ == "__main__":
     sigmas = np.array([0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05,  0.1, 0.2, 0.5, 1.0])
     runners = []
     for sigma in sigmas:
-        runner = ExperimentRunner(3000, lam=0.0, sigma=sigma)
+        runner = ExperimentRunner(6000, lam=0.0, sigma=sigma)
         runners.append(runner)
         runner.start()
 
@@ -49,6 +49,9 @@ if __name__ == "__main__":
 
     results = [np.mean(result[-50:]) for result in results]
     results = np.array(results)
+
+    #np.save("sigmas", sigmas)
+    #np.save("results", results)
 
     plt.semilogx(sigmas, results)
     plt.savefig("results.png")
