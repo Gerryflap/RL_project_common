@@ -80,18 +80,33 @@ class GymEnvWrapper(object):
         self.terminated = True
         self.render = False
         self.state_transformer = state_transformer
+        self.state_min = None
+        self.state_max = None
 
     def reset(self):
         self.terminated = False
-        return self.state_transformer(self.env.reset())
+        s = self.env.reset()
+        self._update_state_min_max(s)
+        return self.state_transformer(s)
 
     def step(self, action):
         s, r, done, _ = self.env.step(action)
         if self.render:
             self.env.render()
         self.terminated = done
+        self._update_state_min_max(s)
         return self.state_transformer(s), r
 
     def set_rendering(self, value: bool):
         self.render = value
+
+    def _update_state_min_max(self, s):
+        if self.state_min is None:
+            self.state_min = s
+            self.state_max = s
+        else:
+            self.state_min = np.min(np.stack([self.state_min, s], axis=0), axis=0)
+            self.state_max = np.max(np.stack([self.state_max, s], axis=0), axis=0)
+
+
 
