@@ -7,6 +7,7 @@ import matplotlib
 matplotlib.use("agg")
 import matplotlib.pyplot as plt
 
+
 class ExperimentRunner(object):
     def __init__(self, episodes, lam=0.0, sigma=0.0):
         self.episodes = episodes
@@ -35,23 +36,35 @@ class ExperimentRunner(object):
     def get_result(self):
         return self.result.get()
 
+
 if __name__ == "__main__":
-    sigmas = np.array([0.0001, 0.0002, 0.0005, 0.001, 0.002, 0.005, 0.01, 0.02, 0.05,  0.1, 0.2, 0.5, 1.0])
+    sigmas = np.array([0.001, 0.002, 0.005, 0.01, 0.02, 0.05,  0.1, 0.5])
+    lambdas = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 0.85, 0.9, 0.92, 0.95, 0.97, 0.99, 1.0])
     runners = []
-    for sigma in sigmas:
-        runner = ExperimentRunner(6000, lam=0.0, sigma=sigma)
-        runners.append(runner)
-        runner.start()
+    xs = np.array([[l, s] for l in lambdas for s in sigmas])
+    for batch_index in range(3):
+        batch = []
+        for l, s in xs:
+            runner = ExperimentRunner(30, lam=l, sigma=s)
+            batch.append(runner)
+            runner.start()
+        runners.append(batch)
 
     results = []
-    for runner in runners:
-        results.append(runner.get_result())
+    for batch in runners:
+        batch_results = []
+        for runner in batch:
+            batch_results.append(runner.get_result())
+        results.append(batch_results)
 
-    results = [np.mean(result[-50:]) for result in results]
+    np.save("results_full", np.array(results))
+    results = [[np.mean(result[-100:]) for result in batch] for batch in results]
     results = np.array(results)
 
-    #np.save("sigmas", sigmas)
-    #np.save("results", results)
+    results = np.mean(results, axis=0)
 
-    plt.semilogx(sigmas, results)
-    plt.savefig("results.png")
+    np.save("xs", xs)
+    np.save("results", results)
+
+    #plt.plot(xs, results)
+    #plt.savefig("results.png")
