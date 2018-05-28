@@ -38,14 +38,14 @@ class ExperimentRunner(object):
 
 
 if __name__ == "__main__":
-    sigmas = np.array([0.001, 0.002, 0.005, 0.01, 0.02, 0.05,  0.1, 0.5])
+    sigmas = np.array([0.001, 0.002, 0.005, 0.01, 0.02, 0.05,  0.1, 0.5, 1.0])
     lambdas = np.array([0.0, 0.2, 0.4, 0.6, 0.8, 0.85, 0.9, 0.92, 0.95, 0.97, 0.99, 1.0])
     runners = []
     xs = np.array([[l, s] for l in lambdas for s in sigmas])
-    for batch_index in range(3):
+    for batch_index in range(10):
         batch = []
         for l, s in xs:
-            runner = ExperimentRunner(30, lam=l, sigma=s)
+            runner = ExperimentRunner(3000, lam=l, sigma=s)
             batch.append(runner)
             runner.start()
         runners.append(batch)
