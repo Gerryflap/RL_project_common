@@ -34,11 +34,11 @@ def discretize_state(s):
 
 
 env = core.EnvironmentWrapper(PixelCopter((width, height)), state_transformer=discretize_state)
-agent = sl.SarsaLambdaAgent(0.5, env.action_space, epsilon_constant=0.05, N0=1)
+agent = sl.SarsaLambdaAgent(0.9, env.action_space, epsilon_constant=0.005)
 
 while True:
     scores = []
-    for i in range(30):
+    for i in range(100):
         score = agent.run_episode(env)
         scores.append(score)
     agent.run_episode(env, slow_fps=True)

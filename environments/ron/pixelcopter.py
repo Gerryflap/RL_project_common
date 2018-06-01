@@ -213,10 +213,12 @@ if __name__ == '__main__':
     def network(x):
         ks = tf.keras
         x = ks.layers.Dense(150, activation='relu')(x)
+        x = ks.layers.Dense(150, activation='relu')(x)
+        x = ks.layers.Dense(150, activation='relu')(x)
         x = ks.layers.Dense(50, activation='relu')(x)
         return ks.layers.Dense(2, activation='linear')(x)
 
-    agent = dsl.DeepSARSALambdaAgent(0.5, env.action_space, network, alpha=0.001, state_shape=(7,), epsilon=0.1, epsilon_step_factor=0.9999, epsilon_min=0.005, gamma=1.0, fixed_steps=100, reward_scale=0.1, replay_mem_size=10000, sarsa=True)
+    agent = dsl.DeepSARSALambdaAgent(0.9, env.action_space, network, alpha=0.001, state_shape=(7,), epsilon=0.1, epsilon_step_factor=0.9999, epsilon_min=0.005, gamma=0.9, fixed_steps=100, reward_scale=0.1, replay_mem_size=10000, sarsa=True)
     with tf.Session() as sess:
         init = tf.global_variables_initializer()
         sess.run(init)

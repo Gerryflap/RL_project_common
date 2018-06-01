@@ -6,28 +6,28 @@ import tensorflow as tf
 import environments.ron.pixelcopter as pxc
 ks = tf.keras
 
+width, height = size = 256, 256
+state_shape = (width//8, height//8, 1)
 
 def normalize_state(s):
-    return np.reshape(s.observation / 256, newshape=size + (1,))
+    obs = s.observation[::8, ::8]
+    return np.reshape(obs / 256, newshape=state_shape)
 
-width, height = size = 256//8, 256//8
+
 env = EnvironmentWrapper(pxc.VisualPixelCopter(size), state_transformer=normalize_state)
 
 
 def network(x):
-    x = ks.layers.Conv2D(filters=5, kernel_size=(5, 5), activation='relu', input_shape=size + (1,))(x)
-    x = ks.layers.MaxPool2D((2,2))(x)
     x = ks.layers.Conv2D(filters=5, kernel_size=(5, 5), activation='relu')(x)
-    x = ks.layers.MaxPool2D((2, 2))(x)
+    x = ks.layers.MaxPool2D((4,4))(x)
     x = ks.layers.Conv2D(filters=5, kernel_size=(5, 5), activation='relu')(x)
     x = ks.layers.Flatten()(x)
-    x = ks.layers.Dense(units=16, activation='relu')(x)
     x = ks.layers.Dense(units=2,  activation='linear')(x)
     return x
 
 
-agent = dsl.DeepSARSALambdaAgent(0.5, env.action_space, network, alpha=0.001, state_shape=size + (1,), epsilon=0.1,
-                                 epsilon_step_factor=0.9999, epsilon_min=0.005, gamma=1.0, fixed_steps=100,
+agent = dsl.DeepSARSALambdaAgent(0.5, env.action_space, network, alpha=0.0001, state_shape=state_shape, epsilon=0.5,
+                                 epsilon_step_factor=0.9995, epsilon_min=0.005, gamma=1.0, fixed_steps=100,
                                  reward_scale=0.1, replay_mem_size=10000, sarsa=True)
 with tf.Session() as sess:
     init = tf.global_variables_initializer()
