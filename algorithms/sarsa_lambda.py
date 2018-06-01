@@ -2,6 +2,8 @@
     Implementation of Sarsa(λ)
 """
 import random
+import time
+
 import numpy as np
 
 
@@ -42,7 +44,7 @@ class SarsaLambdaAgent(object):
         else:
             return random.choice(list(self.action_space))
 
-    def run_episode(self, env, verbose=False):
+    def run_episode(self, env, verbose=False, slow_fps=False):
         s = env.reset()
         if verbose:
             print("State: ", s)
@@ -55,6 +57,8 @@ class SarsaLambdaAgent(object):
 
         while not env.terminated:
             s_prime, r = env.step(a)
+            if slow_fps:
+                time.sleep(1/60)
             if verbose:
                 print("State, reward: ", s_prime, r)
             a_prime = self.get_e_greedy(s_prime)

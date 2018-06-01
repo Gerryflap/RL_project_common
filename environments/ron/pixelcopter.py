@@ -206,6 +206,7 @@ if __name__ == '__main__':
         o[6] = s.observation['next_gate_block_bottom'] / height
         return o
 
+
     width, height = size = 256, 256
     env = EnvironmentWrapper(PixelCopter(size), state_transformer=normalize_state)
 
