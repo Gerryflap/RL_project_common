@@ -20,24 +20,25 @@ def discretize_state(s):
     ng_bt = s.observation['next_gate_block_top'] / height
     ng_bb = s.observation['next_gate_block_bottom'] / height
 
-    ng_bt_dist = r(15 * signed_sqrt(ng_bt - y))
-    ng_bb_dist = r(15 * signed_sqrt(ng_bb - y))
+    ng_bt_dist = r(10 * signed_sqrt(ng_bt - y))
+    ng_bb_dist = r(10 * signed_sqrt(ng_bb - y))
 
-    c_dist = r(15 * signed_sqrt(c_dist))
-    f_dist = r(15 * signed_sqrt(f_dist))
-    ng_dist = r(15 * signed_sqrt(ng_dist))
+    c_dist = r(10 * signed_sqrt(c_dist))
+    f_dist = r(10 * signed_sqrt(f_dist))
+    ng_dist = r(5 * signed_sqrt(ng_dist))
 
-    player_vel = r(5 * signed_sqrt(player_vel))
+    player_vel = r(1 * signed_sqrt(player_vel))
+    #print(ng_bb_dist, ng_bt_dist, player_vel, c_dist, f_dist, ng_dist)
 
     return ng_bb_dist, ng_bt_dist, player_vel, c_dist, f_dist, ng_dist
 
 
 env = core.EnvironmentWrapper(PixelCopter((width, height)), state_transformer=discretize_state)
-agent = sl.SarsaLambdaAgent(0.5, env.action_space, N0=1)
+agent = sl.SarsaLambdaAgent(0.5, env.action_space, epsilon_constant=0.05, N0=1)
 
 while True:
     scores = []
-    for i in range(100):
+    for i in range(30):
         score = agent.run_episode(env)
         scores.append(score)
     agent.run_episode(env, slow_fps=True)

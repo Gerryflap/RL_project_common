@@ -8,7 +8,7 @@ import numpy as np
 
 
 class SarsaLambdaAgent(object):
-    def __init__(self, l, action_space, gamma = 1, N0 = 1000):
+    def __init__(self, l, action_space, gamma = 1, N0 = 1000, epsilon_constant=None):
         self.l = l
         self.Qsa = dict()
         self.Nsa = dict()
@@ -16,6 +16,7 @@ class SarsaLambdaAgent(object):
         self.action_space = action_space
         self.N0 = N0
         self.gamma = gamma
+        self.epsilon_constant = epsilon_constant
 
     def Q(self, s, a):
         return self.Qsa.get((s,a), 0)
@@ -31,7 +32,10 @@ class SarsaLambdaAgent(object):
         self.Ns[s] = self.Ns.get(s, 0) + 1
 
     def get_e_greedy(self, s):
-        e = self.N0 / (self.N0 + self.N(s))
+        if self.epsilon_constant is not None:
+            e = self.epsilon_constant
+        else:
+            e = self.N0 / (self.N0 + self.N(s))
         if random.random() > e:
             # Greedy action:
             max_a = None
