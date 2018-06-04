@@ -167,19 +167,18 @@ class DeepQAgent(object):
         scope_to_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=to_scope)
 
         from_map = dict()
-        for var in scope_from_vars:
+        values = sess.run(scope_from_vars)
+        for var, val in zip(scope_from_vars, values):
             unscoped_name = var.name[len(from_scope) + 1:]
-            from_map[unscoped_name] = var
+            from_map[unscoped_name] = val
 
         to_map = dict()
         for var in scope_to_vars:
             unscoped_name = var.name[len(to_scope) + 1:]
             to_map[unscoped_name] = var
 
-        assigns = []
-        for varname, var in from_map.items():
-            assigns.append(tf.assign(to_map[varname], var))
-        sess.run(assigns)
+        for varname, val in from_map.items():
+            to_map[varname].load(val, sess)
 
 
 class GymEnvWrapper(object):

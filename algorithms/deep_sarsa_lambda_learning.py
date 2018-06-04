@@ -193,19 +193,19 @@ class DeepSARSALambdaAgent(object):
         scope_to_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=to_scope)
 
         from_map = dict()
-        for var in scope_from_vars:
+        values = sess.run(scope_from_vars)
+        for var, val in zip(scope_from_vars, values):
             unscoped_name = var.name[len(from_scope) + 1:]
-            from_map[unscoped_name] = var
+            from_map[unscoped_name] = val
 
         to_map = dict()
         for var in scope_to_vars:
             unscoped_name = var.name[len(to_scope) + 1:]
             to_map[unscoped_name] = var
 
-        assigns = []
-        for varname, var in from_map.items():
-            assigns.append(tf.assign(to_map[varname], var))
-        sess.run(assigns)
+        for varname, val in from_map.items():
+            to_map[varname].load(val, sess)
+
 
 
 class GymEnvWrapper(object):
@@ -242,7 +242,7 @@ if __name__ == "__main__":
         x = ks.layers.Dense(50, activation='relu')(x)
         return ks.layers.Dense(4, activation='linear')(x)
 
-    agent = DeepSARSALambdaAgent(0.5, [0,1,2,3], network, alpha=0.001, state_shape=(8,), epsilon=1.0, epsilon_step_factor=0.9999, epsilon_min=0.05, gamma=1.0, fixed_steps=100, reward_scale=0.01, replay_mem_size=10000, sarsa=True)
+    agent = DeepSARSALambdaAgent(0.9, [0,1,2,3], network, alpha=0.001, state_shape=(8,), epsilon=1.0, epsilon_step_factor=0.9999, epsilon_min=0.05, gamma=1.0, fixed_steps=100, reward_scale=0.01, replay_mem_size=10000, sarsa=True)
     with tf.Session() as sess:
         init = tf.global_variables_initializer()
         sess.run(init)
