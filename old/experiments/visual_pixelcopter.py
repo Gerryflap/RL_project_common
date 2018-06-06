@@ -3,7 +3,7 @@ import time
 import algorithms.deep_sarsa_lambda_learning as dsl
 from environments.ron.core import EnvironmentWrapper
 import tensorflow as tf
-import environments.ron.pixelcopter as pxc
+import old.environments.ron.pixelcopter as pxc
 ks = tf.keras
 
 width, height = size = 256, 256

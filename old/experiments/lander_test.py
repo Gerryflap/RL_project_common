@@ -1,8 +1,5 @@
 import gym
-import algorithms.sarsa_lambda as sl
-import algorithms.sarsa_lambda_function_approx as slfa
-import algorithms.deep_q_learning as dq
-import environments.lunar_lander_state_transform as llt
+import old.algorithms.deep_q_learning as dq
 import tensorflow as tf
 import numpy as np
 
@@ -14,7 +11,6 @@ def linear_combination(x):
 
 
 def nn(x):
-    x = tf.keras.layers.BatchNormalization()(x)
     x = tf.keras.layers.Dense(100, activation='elu')(x)
     x = tf.keras.layers.Dense(100, activation='elu')(x)
     x = tf.keras.layers.Dense(4, activation='linear')(x)

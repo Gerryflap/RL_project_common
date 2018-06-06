@@ -1,6 +1,6 @@
 import gym
-import algorithms.sarsa_lambda as sl
-import environments.lunar_lander_state_transform as llt
+import old.algorithms.sarsa_lambda as sl
+import old.environments.lunar_lander_state_transform as llt
 import numpy as np
 import multiprocessing as mup
 import matplotlib

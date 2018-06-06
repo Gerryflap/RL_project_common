@@ -1,6 +1,6 @@
-import algorithms.sarsa_lambda as sl
-from environments.ron.pixelcopter import PixelCopter
-import environments.ron.core as core
+import old.algorithms.sarsa_lambda as sl
+from old.environments.ron.pixelcopter import PixelCopter
+import old.environments.ron.core as core
 import numpy as np
 
 width, height = 256, 256
