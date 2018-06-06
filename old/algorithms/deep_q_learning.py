@@ -6,6 +6,33 @@ import time
 
 class DeepQAgent(object):
     def __init__(self, action_space, deep_net, state_shape, alpha=0.001, epsilon=0.1, gamma=1.0, state_transformer=lambda s: s, epsilon_step_factor=1.0, epsilon_min=0.0, replay_mem_size=1000, fixed_steps=100, batch_size=32, reward_scale=1.0, sarsa=False):
+        """
+        Initializes the Deep Q Agent
+        :param action_space: The action space: a list (or tuple) of actions. These actions can be any type.
+        :param deep_net: A function that takes a batch of states (in TensorFlow) as input and produces a
+            (-1, |action_space|) tensor as output, where -1 denotes the batch size again.
+            Keep in mind that this batch size is not fixed and needs to be flexible for this agent to work.
+        :param state_shape: The shape of the state variable (without the batch dimension). A tuple of dimensions.
+            A 3-vector as state should, for instance, have a shape of (3,).
+        :param alpha: The learning rate used by the Adam optimizer.
+            This is both the Q-learning and the NN optimization learning rate.
+        :param epsilon: Epsilon is the chance of the agent performing random moves. Epsilon helps with exploration.
+        :param gamma: The discount factor. Lower gamma values make the agent care more about short term rewards.
+        :param state_transformer: A function that takes a state and transforms it.
+            Useful for changing the state to a different format.
+        :param epsilon_step_factor: Used for epsilon decay. Epsilon is multiplied with this factor after every step (not episode!).
+        :param epsilon_min: The minimum value of epsilon.
+            Once epsilon is lower than this value, it is set to this value instead.
+        :param replay_mem_size: The size of the replay memory in number of SARSA tuples.
+        :param fixed_steps: The number of steps the target network parameters are fixed before updating.
+            This is done to improve stability.
+        :param batch_size: The size of the training batches
+        :param reward_scale: A number that is multiplied with the rewards to keep them in a sensible range.
+            Neural nets are not good at learning very high (>30) expected rewards.
+            Try to keep the network outputs "sort of" around 1.
+        :param sarsa: When set to true, the agent will use a' instead of the greedy action for computing the target Q.
+        """
+
         self.batch_in_t = tf.placeholder(shape=(None,) + state_shape, dtype=tf.float32)
 
         # Create the live Q-value neural network in a separate TensorFlow scope
@@ -121,7 +148,14 @@ class DeepQAgent(object):
         if len(self.replay_memory) > self.replay_mem_size:
             self.replay_memory.pop(0)
 
-    def train(self, sess):
+    def train(self, sess, take_training_step=True):
+        """
+        Trains the agent.
+        Picks a random batch from the replay memory using the get_batch method and applies the gradients
+        to the network parameters. Also decays learning rate and epsilon if this is enabled.
+        :param take_training_step: If set to true: decays the learning rate and epsilon and increments the step variable.
+        :param sess: The TF session.
+        """
         batch_in, q_targets, action_indices = self.get_batch(sess)
         sess.run(self.optimizer_t, feed_dict={
             self.alpha_t: self.alpha,
@@ -130,17 +164,29 @@ class DeepQAgent(object):
             self.action_indices: action_indices
         })
 
-        self.alpha *= 1.0
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_step_factor
-        elif self.epsilon_min > self.epsilon:
-            self.epsilon = self.epsilon_min
+        if take_training_step:
+            self.alpha *= 1.0
+            if self.epsilon > self.epsilon_min:
+                self.epsilon *= self.epsilon_step_factor
+            elif self.epsilon_min > self.epsilon:
+                self.epsilon = self.epsilon_min
 
-        if self.step%self.fixed_steps == 0:
-            self.update_fixed_q(sess)
-        self.step += 1
+            if self.step%self.fixed_steps == 0:
+                self.update_fixed_q(sess)
+            self.step += 1
 
     def run_episode(self, env, sess, visual=False):
+        """
+        Runs an episode on the provided environment.
+        Also collects experiences and trains the network (if not running in visual mode).
+        :param env: The environment to run on. The environment is reset before the episode by the agent.
+        :param sess: The TF session
+        :param visual: Enables visual mode if set to True. Visual mode:
+            - Renders the screen at every step.
+            - Disables training for a smoother visual experience
+            - Does not store the experiences in the replay memory
+        :return: This method returns the episode score (cumulative reward over the trajectory.)
+        """
         s = env.reset()
         a, a_i, _ = self.get_action(s, sess)
         score = 0
@@ -160,9 +206,22 @@ class DeepQAgent(object):
         return score
 
     def update_fixed_q(self, sess):
+        """
+        Copies the "live" parameters to the fixed Q network.
+        :param sess: The TF session
+        """
         self._copy_from_scope("q_current", "q_fixed", sess)
 
     def _copy_from_scope(self, from_scope, to_scope, sess):
+        """
+        Copies all trainable variables from one TensorFlow variable scope to the other.
+        Variables do need to have the same name (apart from the prepended scope).
+        So copying the variable "x" from scope "current" to "fixed" requires x to be called current/x and fixed/x
+            for this to work. Inner scopes (like current/dense/kernel_0) are also allowed.
+        :param from_scope: The scope to copy from.
+        :param to_scope: The scope to copy to.
+        :param sess: The TF scope
+        """
         scope_from_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=from_scope)
         scope_to_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=to_scope)
 
@@ -182,6 +241,9 @@ class DeepQAgent(object):
 
 
 class GymEnvWrapper(object):
+    """
+    A wrapper for OpenAI gym environments that allows them to work with the DeepQAgent
+    """
     def __init__(self, gym_env, state_transformer):
         self.env = gym_env
         self.terminated = True
