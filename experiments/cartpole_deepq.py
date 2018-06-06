@@ -2,9 +2,9 @@ if __name__ == '__main__':
     import keras as ks
     import numpy as np
 
-    from proposed_standardization.environments.cartpole import CartPole
-    from proposed_standardization.agents.deep_q import DeepQLearning
-    from proposed_standardization.q_network import QNetwork
+    from environments.cartpole import CartPole
+    from agents.deep_q import DeepQLearning
+    from q_network import QNetwork
 
     nn = ks.models.Sequential()
     nn.add(ks.layers.Dense(32, activation='sigmoid', input_shape=(4,)))

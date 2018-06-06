@@ -1,5 +1,5 @@
-from proposed_standardization.core import Environment
-from proposed_standardization.policy import Policy
+from core import Environment
+from policy import Policy
 
 
 class Agent:

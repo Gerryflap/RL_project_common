@@ -1,12 +1,14 @@
 if __name__ == '__main__':
+
     import numpy as np
     import matplotlib.pyplot as plt
-    from proposed_standardization.environments.easy21 import Easy21
-    from proposed_standardization.agents.sarsalambda import SarsaLambda
+
+    from agents.montecarlo import MonteCarlo
+    from environments.easy21 import Easy21
 
     env = Easy21()
 
-    procedure = SarsaLambda(env, lam=0.2)
+    procedure = MonteCarlo(env)
 
     q = procedure.learn(num_iter=1000000)
 

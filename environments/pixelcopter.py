@@ -3,7 +3,7 @@ import pygame
 from ple import PLE
 from ple.games import Pixelcopter
 
-from proposed_standardization.core import Observation, Action, DiscreteEnvironment
+from core import Observation, Action, DiscreteEnvironment
 
 """
     PixelCopter Environment wrapper for PyGame Learning Environment's PixelCopter

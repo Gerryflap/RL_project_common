@@ -1,6 +1,6 @@
 import random
 
-from proposed_standardization.q_estimator import QEstimator
+from q_estimator import QEstimator
 
 """
     Various Policy classes

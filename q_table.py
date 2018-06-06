@@ -1,7 +1,7 @@
 import collections
 
-from proposed_standardization.core import Observation, Action, DiscreteEnvironment
-from proposed_standardization.q_estimator import QEstimator
+from core import Observation, Action, DiscreteEnvironment
+from q_estimator import QEstimator
 
 
 class QTable(collections.MutableMapping, QEstimator):

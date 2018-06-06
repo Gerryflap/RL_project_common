@@ -2,10 +2,10 @@ from collections import deque
 
 import numpy as np
 
-from proposed_standardization.agent import Agent
-from proposed_standardization.core import DiscreteEnvironment
-from proposed_standardization.policy import EpsilonGreedy
-from proposed_standardization.q_network import QNetwork
+from agent import Agent
+from core import DiscreteEnvironment
+from policy import EpsilonGreedy
+from q_network import QNetwork
 
 
 class DeepQLearning(Agent):
@@ -72,7 +72,7 @@ class DeepQLearning(Agent):
 
 if __name__ == '__main__':
     import keras as ks
-    from proposed_standardization.environments.cartpole import CartPole
+    from environments.cartpole import CartPole
 
     nn = ks.models.Sequential()
     nn.add(ks.layers.Dense(32, activation='sigmoid', input_shape=(4,)))

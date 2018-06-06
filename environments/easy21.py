@@ -1,6 +1,6 @@
 import random
 
-from proposed_standardization.core import DiscreteEnvironment, Observation, Action
+from core import DiscreteEnvironment, Observation, Action
 
 '''
     Easy21 environment implementation as defined in 

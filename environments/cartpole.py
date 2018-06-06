@@ -1,6 +1,6 @@
 import gym
 
-from proposed_standardization.core import DiscreteEnvironment, Observation, Action
+from core import DiscreteEnvironment, Observation, Action
 
 """
     Environment wrapper for OpenAI Gym's CartPole

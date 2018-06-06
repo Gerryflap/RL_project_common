@@ -1,10 +1,10 @@
 from collections import defaultdict
 
-import proposed_standardization.q_table as q_table
+import q_table as q_table
 
-from proposed_standardization.agent import Agent
-from proposed_standardization.core import DiscreteEnvironment
-from proposed_standardization.policy import EpsilonGreedy
+from agent import Agent
+from core import DiscreteEnvironment
+from policy import EpsilonGreedy
 
 
 class SarsaLambda(Agent):
@@ -92,7 +92,7 @@ class TD0(SarsaLambda):
 if __name__ == '__main__':
     import numpy as np
     import matplotlib.pyplot as plt
-    from proposed_standardization.environments.easy21 import Easy21
+    from environments.easy21 import Easy21
 
     _env = Easy21()
 

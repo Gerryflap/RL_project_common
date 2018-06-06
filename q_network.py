@@ -1,7 +1,7 @@
 import numpy as np
 import keras as ks
 
-from proposed_standardization.q_estimator import QEstimator
+from q_estimator import QEstimator
 
 
 class QNetwork(QEstimator):
@@ -9,7 +9,7 @@ class QNetwork(QEstimator):
         Deep Q-Network class that wraps around a suitable Keras model
     """
 
-    def __init__(self, model: ks.Model, out_map: list, feature_ex: callable=lambda x: x, gamma: float=1.0):
+    def __init__(self, model: ks.models.Model, out_map: list, feature_ex: callable=lambda x: x, gamma: float=1.0):
         """
         Create a new Deep Q-Network
         :param model: Keras model to be used in the network

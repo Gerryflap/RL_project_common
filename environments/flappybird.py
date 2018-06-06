@@ -3,7 +3,7 @@ import pygame
 from ple import PLE
 import ple.games
 
-from proposed_standardization.core import DiscreteEnvironment, Observation, Action
+from core import DiscreteEnvironment, Observation, Action
 
 """
     Flappy Bird Environment wrapper for PyGame Learning Environment's Flappy Bird
