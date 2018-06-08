@@ -19,9 +19,10 @@ import random
 import time
 ks = tf.keras
 
-
-class DeepSARSALambdaAgent(object):
+from experiment_util import Configurable
+class DeepSARSALambdaAgent(Configurable):
     def __init__(self, lambd, action_space, deep_net: ks.models.Model, state_shape, alpha=0.001, epsilon=0.1, gamma=1.0,
+
                  state_transformer=lambda s: s, epsilon_step_factor=1.0, epsilon_min=0.0, replay_mem_size=1000,
                  fixed_steps=100, batch_size=32, reward_scale=1.0):
         """
