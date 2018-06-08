@@ -130,6 +130,7 @@ class DeepSARSALambdaAgent(object):
             trajectory = trajectory[index:]
             trajectories.append(trajectory)
 
+        # TODO: Fix the fact that this literally makes it 2 seconds slower:
         live_qs = self.live_model.predict(np.array([t[0][0] for t in trajectories]))
 
         for i in range(self.batch_size):
