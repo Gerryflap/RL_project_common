@@ -9,15 +9,15 @@ import tensorflow as tf
 import numpy as np
 import random
 import time
+ks = tf.keras
 
 
 class DeepQAgent(object):
-    def __init__(self, action_space, deep_net, state_shape, alpha=0.001, epsilon=0.1, gamma=1.0, state_transformer=lambda s: s, epsilon_step_factor=1.0, epsilon_min=0.0, replay_mem_size=1000, fixed_steps=100, batch_size=32, reward_scale=1.0, sarsa=False):
+    def __init__(self, action_space, model: ks.models.Model, state_shape, alpha=0.001, epsilon=0.1, gamma=1.0, state_transformer=lambda s: s, epsilon_step_factor=1.0, epsilon_min=0.0, replay_mem_size=1000, fixed_steps=100, batch_size=32, reward_scale=1.0, sarsa=False):
         """
         Initializes the Deep Q Agent
         :param action_space: The action space: a list (or tuple) of actions. These actions can be any type.
-        :param deep_net: A function that takes a batch of states (in TensorFlow) as input and produces a
-            (-1, |action_space|) tensor as output, where -1 denotes the batch size again.
+        :param model: A Keras model that accepts a state-shaped input and outputs an |action_shape| shaped output
             Keep in mind that this batch size is not fixed and needs to be flexible for this agent to work.
         :param state_shape: The shape of the state variable (without the batch dimension). A tuple of dimensions.
             A 3-vector as state should, for instance, have a shape of (3,).
@@ -43,8 +43,7 @@ class DeepQAgent(object):
         self.batch_in_t = tf.placeholder(shape=(None,) + state_shape, dtype=tf.float32)
 
         # Create the live Q-value neural network in a separate TensorFlow scope
-        with tf.variable_scope("q_current"):
-            self.Qsa_t = deep_net(self.batch_in_t)
+        self.live_model = model
 
         self.action_space = list(action_space)
         self.alpha_t = tf.placeholder_with_default(alpha, None)
@@ -61,23 +60,17 @@ class DeepQAgent(object):
         # This deep Q-learning implementation can also be switched to SARSA if deemed necessary.
         self.sarsa = sarsa
 
-        # Create the fixed Q-value neural network in a separate TensorFlow scope
-        with tf.variable_scope("q_fixed"):
-            self.Qsa_fixed_t = deep_net(self.batch_in_t)
+        self.fixed_model = ks.models.model_from_json(self.live_model.to_json())
 
-        # The target Q-value tensor, which is used during training
-        self.Q_target_t = tf.placeholder(tf.float32, shape=(None, len(action_space)))
-        loss_t = (self.Qsa_t * self.action_indices - self.Q_target_t)**2
-
-        # Apply the optimizer only on trainable variables in the live scope (not the fixed one):
-        self.optimizer_t = tf.train.AdamOptimizer(self.alpha_t).minimize(loss_t, var_list=tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope='q_current'))
+        self.live_model.compile(ks.optimizers.Adam(alpha), ks.losses.mean_squared_error)
+        #self.fixed_model.compile(ks.optimizers.Adam(alpha), ks.losses.mean_squared_error)
 
         self.replay_memory = []
         self.replay_mem_size = replay_mem_size
         self.fixed_steps = fixed_steps
         self.batch_size = batch_size
 
-    def Q(self, s, sess):
+    def Q(self, s):
         """
         Returns the Q-values of state s for every action as a numpy array.
         This is calculated using the live model parameters.
@@ -86,9 +79,10 @@ class DeepQAgent(object):
         :return: Numpy array with a Q-value for every action in the same order as the provided action_space variable
         """
         s = self.s_transformer(s)
-        return sess.run(self.Qsa_t, feed_dict= {self.batch_in_t: np.array([s])})[0]
+        s = np.expand_dims(s, axis=0)
+        return self.live_model.predict(s)[0]
 
-    def Q_fixed(self, s, sess):
+    def Q_fixed(self, s):
         """
         Returns the Q-values of state s for every action as a numpy array.
         This is calculated using the fixed model parameters.
@@ -100,14 +94,15 @@ class DeepQAgent(object):
             # Ensure that a terminal state has a fixed 0 reward, which acts like an "anchor" for the value function
             return np.zeros((len(self.action_space, )))
         s = self.s_transformer(s)
-        return sess.run(self.Qsa_fixed_t, feed_dict= {self.batch_in_t: np.array([s])})[0]
+        s = np.expand_dims(s, axis=0)
+        return self.fixed_model.predict([s])[0]
 
-    def get_action(self, s, sess):
+    def get_action(self, s):
         """
         Gets the e-greedy action
         :return: (action, action_index, q-value)
         """
-        q_values = self.Q(s, sess)
+        q_values = self.Q(s)
         if random.random() > self.epsilon:
             # Pick greedy action
             a_i = np.argmax(q_values)
@@ -118,7 +113,7 @@ class DeepQAgent(object):
         q_value = q_values[a_i]
         return a, a_i, q_value
 
-    def get_batch(self, sess):
+    def get_batch(self):
         """
         Generates the batch by sampling randomly from the replay memory.
         :param sess: TF session
@@ -132,14 +127,15 @@ class DeepQAgent(object):
         i = 0
         for s, a_i, r, s_p, a_i_p in sarsa_batch:
             if self.sarsa:
-                q_target = r + self.gamma * self.Q_fixed(s_p, sess)[a_i_p]
+                q_target = r + self.gamma * self.Q_fixed(s_p)[a_i_p]
             else:
-                q_target = r + self.gamma * np.max(self.Q_fixed(s_p, sess))
+                q_target = r + self.gamma * np.max(self.Q_fixed(s_p))
             action_indices[i, a_i] = 1
+            q_targets[i] = self.Q(s)
             q_targets[i, a_i] = q_target
             xs.append(self.s_transformer(s))
             i += 1
-        return xs, q_targets, action_indices
+        return xs, q_targets
 
     def store_experience(self, s, a_i, r, s_p, a_i_p):
         """
@@ -155,7 +151,7 @@ class DeepQAgent(object):
         if len(self.replay_memory) > self.replay_mem_size:
             self.replay_memory.pop(0)
 
-    def train(self, sess, take_training_step=True):
+    def train(self, take_training_step=True):
         """
         Trains the agent.
         Picks a random batch from the replay memory using the get_batch method and applies the gradients
@@ -163,13 +159,9 @@ class DeepQAgent(object):
         :param take_training_step: If set to true: decays the learning rate and epsilon and increments the step variable.
         :param sess: The TF session.
         """
-        batch_in, q_targets, action_indices = self.get_batch(sess)
-        sess.run(self.optimizer_t, feed_dict={
-            self.alpha_t: self.alpha,
-            self.batch_in_t: batch_in,
-            self.Q_target_t: q_targets,
-            self.action_indices: action_indices
-        })
+        batch_in, q_targets = self.get_batch()
+        batch_in = np.array(batch_in)
+        self.live_model.fit(batch_in, q_targets, verbose=False)
 
         if take_training_step:
             self.alpha *= 1.0
@@ -179,10 +171,10 @@ class DeepQAgent(object):
                 self.epsilon = self.epsilon_min
 
             if self.step%self.fixed_steps == 0:
-                self.update_fixed_q(sess)
+                self.update_fixed_q()
             self.step += 1
 
-    def run_episode(self, env, sess, visual=False):
+    def run_episode(self, env, visual=False):
         """
         Runs an episode on the provided environment.
         Also collects experiences and trains the network (if not running in visual mode).
@@ -195,16 +187,16 @@ class DeepQAgent(object):
         :return: This method returns the episode score (cumulative reward over the trajectory.)
         """
         s = env.reset()
-        a, a_i, _ = self.get_action(s, sess)
+        a, a_i, _ = self.get_action(s)
         score = 0
         env.render = visual
 
         while not env.terminated:
             s_p, r = env.step(a)
-            a_p, a_i_p, _ = self.get_action(s_p, sess)
+            a_p, a_i_p, _ = self.get_action(s_p)
             if not visual:
                 self.store_experience(s, a_i, r*self.reward_scale, s_p, a_i_p)
-                self.train(sess)
+                self.train()
 
             s, a, a_i = s_p, a_p, a_i_p
             score += r
@@ -212,39 +204,12 @@ class DeepQAgent(object):
             self.store_experience(s, a_i, 0, "TERMINAL", 0)
         return score
 
-    def update_fixed_q(self, sess):
+    def update_fixed_q(self):
         """
         Copies the "live" parameters to the fixed Q network.
         :param sess: The TF session
         """
-        self._copy_from_scope("q_current", "q_fixed", sess)
-
-    def _copy_from_scope(self, from_scope, to_scope, sess):
-        """
-        Copies all trainable variables from one TensorFlow variable scope to the other.
-        Variables do need to have the same name (apart from the prepended scope).
-        So copying the variable "x" from scope "current" to "fixed" requires x to be called current/x and fixed/x
-            for this to work. Inner scopes (like current/dense/kernel_0) are also allowed.
-        :param from_scope: The scope to copy from.
-        :param to_scope: The scope to copy to.
-        :param sess: The TF scope
-        """
-        scope_from_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=from_scope)
-        scope_to_vars = tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, scope=to_scope)
-
-        from_map = dict()
-        values = sess.run(scope_from_vars)
-        for var, val in zip(scope_from_vars, values):
-            unscoped_name = var.name[len(from_scope) + 1:]
-            from_map[unscoped_name] = val
-
-        to_map = dict()
-        for var in scope_to_vars:
-            unscoped_name = var.name[len(to_scope) + 1:]
-            to_map[unscoped_name] = var
-
-        for varname, val in from_map.items():
-            to_map[varname].load(val, sess)
+        self.fixed_model.set_weights(self.live_model.get_weights())
 
 
 class GymEnvWrapper(object):
@@ -278,25 +243,22 @@ if __name__ == "__main__":
     env = gym.make("LunarLander-v2")
     env = GymEnvWrapper(env, lambda s:s)
 
-    def network(x):
-        ks = tf.keras
-        x = ks.layers.Dense(150, activation='relu')(x)
-        x = ks.layers.Dense(50, activation='relu')(x)
-        return ks.layers.Dense(4, activation='linear')(x)
+    network = ks.models.Sequential()
+    network.add(ks.layers.Dense(150, activation='relu', input_shape=(8,)))
+    network.add(ks.layers.Dense(50, activation='relu'))
+    network.add(ks.layers.Dense(4, activation='linear'))
 
     agent = DeepQAgent([0,1,2,3], network, alpha=0.001, state_shape=(8,), epsilon=1.0, epsilon_step_factor=0.9999, epsilon_min=0.05, gamma=1.0, fixed_steps=100, reward_scale=0.01, replay_mem_size=10000, sarsa=True)
-    with tf.Session() as sess:
-        init = tf.global_variables_initializer()
-        sess.run(init)
-        s = env.reset()
-        while True:
-            scores = []
-            for i in range(4):
-                score = agent.run_episode(env, sess)
-                scores.append(score)
-            agent.run_episode(env, sess, True)
 
-            print("Score: ", sum(scores)/len(scores))
-            print("Eps: ", agent.epsilon)
-            print("Q: ", agent.Q(s, sess))
-            print("Q fixed: ", agent.Q_fixed(s, sess))
+    s = env.reset()
+    while True:
+        scores = []
+        for i in range(4):
+            score = agent.run_episode(env)
+            scores.append(score)
+        agent.run_episode(env, True)
+
+        print("Score: ", sum(scores)/len(scores))
+        print("Eps: ", agent.epsilon)
+        print("Q: ", agent.Q(s))
+        print("Q fixed: ", agent.Q_fixed(s))

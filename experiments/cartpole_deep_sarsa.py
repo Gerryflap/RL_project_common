@@ -3,13 +3,13 @@ import environments.wrappers.standardized_env_wrapper as wrapper
 import agents.deep_sarsa_lambda as dsl
 import tensorflow as tf
 import numpy as np
+ks = tf.keras
 
 
-def neural_network(x):
-    ks = tf.keras
-    x = ks.layers.Dense(150, activation='relu')(x)
-    x = ks.layers.Dense(50, activation='relu')(x)
-    return ks.layers.Dense(2, activation='linear')(x)
+neural_network = ks.models.Sequential()
+neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
+neural_network.add(ks.layers.Dense(50, activation='relu'))
+neural_network.add(ks.layers.Dense(2, activation='linear'))
 
 
 senv = environments.cartpole.CartPole()

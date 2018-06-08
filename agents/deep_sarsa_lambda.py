@@ -17,10 +17,11 @@ import tensorflow as tf
 import numpy as np
 import random
 import time
+ks = tf.keras
 
 
 class DeepSARSALambdaAgent(object):
-    def __init__(self, lambd, action_space, deep_net, state_shape, alpha=0.001, epsilon=0.1, gamma=1.0,
+    def __init__(self, lambd, action_space, deep_net: ks.models.Model, state_shape, alpha=0.001, epsilon=0.1, gamma=1.0,
                  state_transformer=lambda s: s, epsilon_step_factor=1.0, epsilon_min=0.0, replay_mem_size=1000,
                  fixed_steps=100, batch_size=32, reward_scale=1.0):
         """
@@ -28,8 +29,7 @@ class DeepSARSALambdaAgent(object):
         :param lambd: The value for lambda. The target Q-values are calculated using TD(λ),
             where TD(0) only considers the next "step" in the trajectory and TD(1) uses the entire trajectory.
         :param action_space: The action space: a list (or tuple) of actions. These actions can be any type.
-        :param deep_net: A function that takes a batch of states (in TensorFlow) as input and produces a
-            (-1, |action_space|) tensor as output, where -1 denotes the batch size again.
+        :param deep_net: A Keras model that accepts a state-shaped input and outputs an |action_shape| shaped output
             Keep in mind that this batch size is not fixed and needs to be flexible for this agent to work.
         :param state_shape: The shape of the state variable (without the batch dimension). A tuple of dimensions.
             A 3-vector as state should, for instance, have a shape of (3,).
