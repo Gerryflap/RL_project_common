@@ -123,10 +123,17 @@ class DeepSARSALambdaAgent(object):
 
         xs = []
         q_targets = []
+        trajectories = []
         for i in range(self.batch_size):
             trajectory = random.choice(self.replay_memory)
             index = random.randint(0, len(trajectory) - 1)
             trajectory = trajectory[index:]
+            trajectories.append(trajectory)
+
+        live_qs = self.live_model.predict(np.array([t[0][0] for t in trajectories]))
+
+        for i in range(self.batch_size):
+            trajectory = trajectories[i]
             total_reward = 0
             q_return = 0
 
@@ -146,7 +153,7 @@ class DeepSARSALambdaAgent(object):
 
             s, a_i, r, s_p, a_i_p = trajectory[0]
             q_return *= (1 - self.lambd)
-            q_return_vector = self.Q(s)
+            q_return_vector = live_qs[i]
             q_return_vector[a_i] = q_return
             q_targets.append(q_return_vector)
             xs.append(self.s_transformer(s))
