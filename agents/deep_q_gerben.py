@@ -42,11 +42,9 @@ class DeepQAgent(object):
 
         self.batch_in_t = tf.placeholder(shape=(None,) + state_shape, dtype=tf.float32)
 
-        # Create the live Q-value neural network in a separate TensorFlow scope
         self.live_model = model
 
         self.action_space = list(action_space)
-        self.alpha_t = tf.placeholder_with_default(alpha, None)
         self.alpha = alpha
         self.gamma = gamma
         self.epsilon = epsilon
@@ -55,7 +53,7 @@ class DeepQAgent(object):
         self.s_transformer = state_transformer
         self.action_indices = tf.placeholder(tf.float32, shape=(None, len(action_space)))
         self.step = 0
-        self.reward_scale=reward_scale
+        self.reward_scale = reward_scale
 
         # This deep Q-learning implementation can also be switched to SARSA if deemed necessary.
         self.sarsa = sarsa
@@ -63,7 +61,6 @@ class DeepQAgent(object):
         self.fixed_model = ks.models.model_from_json(self.live_model.to_json())
 
         self.live_model.compile(ks.optimizers.Adam(alpha), ks.losses.mean_squared_error)
-        #self.fixed_model.compile(ks.optimizers.Adam(alpha), ks.losses.mean_squared_error)
 
         self.replay_memory = []
         self.replay_mem_size = replay_mem_size
@@ -75,7 +72,6 @@ class DeepQAgent(object):
         Returns the Q-values of state s for every action as a numpy array.
         This is calculated using the live model parameters.
         :param s: State
-        :param sess: TensorFlow session
         :return: Numpy array with a Q-value for every action in the same order as the provided action_space variable
         """
         s = self.s_transformer(s)
@@ -87,7 +83,6 @@ class DeepQAgent(object):
         Returns the Q-values of state s for every action as a numpy array.
         This is calculated using the fixed model parameters.
         :param s: State
-        :param sess: TensorFlow session
         :return: Numpy array with a Q-value for every action in the same order as the provided action_space variable
         """
         if type(s) == str and s == "TERMINAL":
@@ -116,7 +111,6 @@ class DeepQAgent(object):
     def get_batch(self):
         """
         Generates the batch by sampling randomly from the replay memory.
-        :param sess: TF session
         :return: xs, q_targets, action_indices
         """
         sarsa_batch = np.array(self.replay_memory)[np.random.choice(np.arange(0, len(self.replay_memory)), self.batch_size)]
@@ -157,7 +151,6 @@ class DeepQAgent(object):
         Picks a random batch from the replay memory using the get_batch method and applies the gradients
         to the network parameters. Also decays learning rate and epsilon if this is enabled.
         :param take_training_step: If set to true: decays the learning rate and epsilon and increments the step variable.
-        :param sess: The TF session.
         """
         batch_in, q_targets = self.get_batch()
         batch_in = np.array(batch_in)
@@ -179,7 +172,6 @@ class DeepQAgent(object):
         Runs an episode on the provided environment.
         Also collects experiences and trains the network (if not running in visual mode).
         :param env: The environment to run on. The environment is reset before the episode by the agent.
-        :param sess: The TF session
         :param visual: Enables visual mode if set to True. Visual mode:
             - Renders the screen at every step.
             - Disables training for a smoother visual experience
@@ -207,7 +199,6 @@ class DeepQAgent(object):
     def update_fixed_q(self):
         """
         Copies the "live" parameters to the fixed Q network.
-        :param sess: The TF session
         """
         self.fixed_model.set_weights(self.live_model.get_weights())
 
