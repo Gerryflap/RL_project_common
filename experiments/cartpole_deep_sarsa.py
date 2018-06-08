@@ -6,10 +6,11 @@ import numpy as np
 ks = tf.keras
 
 
-neural_network = ks.models.Sequential()
-neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
-neural_network.add(ks.layers.Dense(50, activation='relu'))
-neural_network.add(ks.layers.Dense(2, activation='linear'))
+def neural_network(x):
+    x = ks.layers.Dense(150, activation='relu', input_shape=(4,))(x)
+    x = ks.layers.Dense(50, activation='relu')(x)
+    x = ks.layers.Dense(2, activation='linear')(x)
+    return x
 
 
 senv = environments.cartpole.CartPole()
