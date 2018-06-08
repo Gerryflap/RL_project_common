@@ -15,6 +15,7 @@ class StandardizedEnvWrapper(object):
         self.env = env
         self.state_transformer = state_transformer
         self.terminated = True
+        self.render = False
         self.action_space = self.env.valid_actions()
 
     def reset(self):
@@ -23,7 +24,12 @@ class StandardizedEnvWrapper(object):
         return self.state_transformer(observation)
 
     def step(self, action: core.Action):
+        self.env.render = self.render
         observation, reward = self.env.step(action)
         self.terminated = observation.terminal
         return self.state_transformer(observation), reward
+
+    def set_rendering(self, rendering):
+        self.env.render = rendering
+        self.render = rendering
 
