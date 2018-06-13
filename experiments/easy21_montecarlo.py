@@ -1,10 +1,8 @@
 if __name__ == '__main__':
-
     import numpy as np
     import matplotlib.pyplot as plt
-
-    from agents.montecarlo import MonteCarlo
-    from environments.easy21 import Easy21
+    from new_betterer_version.agents.montecarlo import MonteCarlo
+    from new_betterer_version.environments.easy21 import Easy21
 
     env = Easy21()
 

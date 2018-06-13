@@ -1,7 +1,9 @@
 import random
-from experiment_util import Configurable
+
 """
     Core classes of a Reinforcement Learning experiment
+    
+    NOTE: Only fully observable environments are supported in this implementation!
 """
 
 
@@ -12,14 +14,14 @@ class Action:
     pass
 
 
-class Observation:
+class State:
     """
-        Observation obtained from executing an action in the environment
+        Environment state obtained from executing an action in the environment
     """
 
     def __init__(self, terminal: bool):
         """
-        Create a new observation
+        Create a new state
         :param terminal: A boolean that indicates if the environment state is terminal
         """
         self.terminal = terminal
@@ -31,34 +33,11 @@ class Observation:
         return self.terminal
 
 
-class Environment(Configurable):
+class Environment:
     """
         Class for describing the environments and how they handle states/actions/rewards/observations for the algorithms
         to learn from
     """
-
-    def __init__(self, observation_space: callable, action_space: callable):
-        """
-        Create a new Environment
-        :param observation_space:  The class of observations that are obtained from this environment
-        :param action_space:       The class of actions that can be used on this environment
-        """
-        self._action_space = action_space
-        self._observation_space = observation_space
-
-    @property
-    def action_space(self) -> callable:
-        """
-        :return: The class of actions that can be used on this environment
-        """
-        return self._action_space
-
-    @property
-    def observation_space(self) -> callable:
-        """
-        :return: The class of observations that are obtained from this environment
-        """
-        return self._observation_space
 
     def sample(self):
         """
@@ -72,12 +51,12 @@ class Environment(Configurable):
         Perform the action on the current model state. Return an observation and a corresponding reward
         :param action: The action to be performed
         :return: A two-tuple of
-                        - an observation
+                        - a state observation
                         - reward obtained from performing the action
         """
         raise NotImplementedError
 
-    def reset(self) -> Observation:
+    def reset(self) -> State:
         """
         Reset the internal model state
         :return: an initial observation
@@ -85,10 +64,27 @@ class Environment(Configurable):
         raise NotImplementedError
 
 
-class DiscreteEnvironment(Environment):
+class FiniteActionEnvironment(Environment):
     """
         Class of environments that have a finite set of actions
     """
+
+    @staticmethod
+    def valid_actions_from(state) -> list:
+        """
+        Get all valid actions that can be executed on the state
+        :param state: The state on which the actions should be executed
+        :return: a list of valid actions
+        """
+        raise NotImplementedError
+
+    @staticmethod
+    def action_space() -> list:
+        """
+        Get all actions that can possibly occur when running the environment
+        :return: a list of possible actions
+        """
+        raise NotImplementedError
 
     def valid_actions(self) -> list:
         """
@@ -107,5 +103,5 @@ class DiscreteEnvironment(Environment):
     def step(self, action: Action) -> tuple:
         raise NotImplementedError
 
-    def reset(self) -> Observation:
+    def reset(self) -> State:
         raise NotImplementedError

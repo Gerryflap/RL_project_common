@@ -1,10 +1,11 @@
+
+
 from collections import defaultdict
 
-import q_table as q_table
-
-from agent import Agent
-from core import DiscreteEnvironment
-from policy import EpsilonGreedy
+from new_betterer_version.agent import Agent
+from new_betterer_version.core import FiniteActionEnvironment
+from new_betterer_version.policy import EpsilonGreedyPolicy
+from new_betterer_version.q_table import QTable
 
 
 class SarsaLambda(Agent):
@@ -12,7 +13,7 @@ class SarsaLambda(Agent):
         Sarsa-lambda Agent implementation
     """
 
-    def __init__(self, env: DiscreteEnvironment, lam: float = 0.2, gamma: float = 1.0):
+    def __init__(self, env: FiniteActionEnvironment, lam: float = 0.2, gamma: float = 1.0):
         """
         Create a new SarsaLambda Agent
         :param env: The environment the agent will learn from
@@ -22,19 +23,16 @@ class SarsaLambda(Agent):
         super().__init__(env)
         assert 0 <= lam <= 1
 
-        self.q_table = q_table.for_env(env)
+        self.q_table = QTable()
         self.visit_count = defaultdict(int)
         self.eligibility_trace = defaultdict(int)
-        self.policy = EpsilonGreedy(env.observation_space,
-                                    env.valid_actions,
-                                    self.q_table,
-                                    self.epsilon
-                                    )
-        self.env = env
+        self.policy = self.q_table.derive_policy(EpsilonGreedyPolicy,
+                                                 env.valid_actions_from,
+                                                 epsilon=self.epsilon)
         self.lam = lam
         self.gamma = gamma
 
-    def learn(self, num_iter=100000) -> EpsilonGreedy:
+    def learn(self, num_iter=100000) -> EpsilonGreedyPolicy:
         """
         Learn a policy from the environment
         :param num_iter: The number of iterations the algorithm should run
@@ -53,7 +51,7 @@ class SarsaLambda(Agent):
                 s_p, r = self.env.step(a)
                 N[s_p] += 1
 
-                a_p = pi(s)
+                a_p = pi.sample(s)
 
                 E[s, a] += 1
                 N[s_p, a_p] += 1
@@ -76,7 +74,7 @@ class MonteCarlo(SarsaLambda):
         SarsaLambda with lambda=1 is equivalent to MonteCarlo
     """
 
-    def __init__(self, env: DiscreteEnvironment):
+    def __init__(self, env: FiniteActionEnvironment):
         super().__init__(env, lam=1)
 
 
@@ -85,14 +83,14 @@ class TD0(SarsaLambda):
         SarsaLambda with lambda=0 is equivalent to TD(0)
     """
 
-    def __init__(self, env: DiscreteEnvironment):
+    def __init__(self, env: FiniteActionEnvironment):
         super().__init__(env, lam=0)
 
 
 if __name__ == '__main__':
     import numpy as np
     import matplotlib.pyplot as plt
-    from environments.easy21 import Easy21
+    from new_betterer_version.environments.easy21 import Easy21
 
     _env = Easy21()
 

@@ -1,8 +1,8 @@
-from core import Environment
-from policy import Policy
-from experiment_util import Configurable
+from new_betterer_version.core import Environment
+from new_betterer_version.policy import Policy
 
-class Agent(Configurable):
+
+class Agent:
     """
         Agent class that learns a policy in a certain environment
     """

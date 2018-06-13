@@ -1,10 +1,9 @@
 from collections import defaultdict
 
-import q_table as q_table
-
-from agent import Agent
-from core import DiscreteEnvironment
-from policy import Policy, EpsilonGreedy
+from new_betterer_version.agent import Agent
+from new_betterer_version.core import FiniteActionEnvironment
+from new_betterer_version.policy import EpsilonGreedyPolicy
+from new_betterer_version.q_table import QTable
 
 
 class MonteCarlo(Agent):
@@ -12,23 +11,21 @@ class MonteCarlo(Agent):
         Monte Carlo Agent implementation
     """
 
-    def __init__(self, env: DiscreteEnvironment, gamma: float=1.0):
+    def __init__(self, env: FiniteActionEnvironment, gamma: float = 1.0):
         """
         Create a new MonteCarlo Agent
         :param env: The environment the agent will learn from
         :param gamma: Reward discount factor
         """
         super().__init__(env)
-        self.q_table = q_table.for_env(env)
+        self.q_table = QTable()
         self.visit_count = defaultdict(int)
-        self.policy = EpsilonGreedy(env.observation_space,
-                                    env.valid_actions,
-                                    self.q_table,
-                                    self.epsilon
-                                    )
+        self.policy = self.q_table.derive_policy(EpsilonGreedyPolicy,
+                                                 env.valid_actions_from,
+                                                 epsilon=self.epsilon)
         self.gamma = gamma
 
-    def learn(self, num_iter=100000) -> Policy:
+    def learn(self, num_iter=100000) -> EpsilonGreedyPolicy:
         """
         Learn a policy from the environment
         :param num_iter: The number of iterations the algorithm should run
@@ -39,11 +36,11 @@ class MonteCarlo(Agent):
             s = self.env.reset()
             e, r = [], 0
             while not s.is_terminal():                          # Execute an episode
-                a = pi(s)
+                a = pi.sample(s)
                 e += [[s, a]]
                 s, r = self.env.step(a)
                 e[-1] += [r]
-
+            
             for i, (s, a, r) in enumerate(reversed(e)):         # Reverse rewards so G can be computed efficiently
                 g = r if i == 0 else g * self.gamma + r
                 N[s, a] += 1
@@ -59,7 +56,7 @@ class MonteCarlo(Agent):
 if __name__ == '__main__':
     import numpy as np
     import matplotlib.pyplot as plt
-    from environments.easy21 import Easy21
+    from new_betterer_version.environments.easy21 import Easy21
 
     _env = Easy21()
 

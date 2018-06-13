@@ -1,10 +1,10 @@
+
 if __name__ == '__main__':
     import keras as ks
     import numpy as np
-
-    from agents.deep_q import DeepQLearning
-    from environments.flappybird import FlappyBird
-    from q_network import QNetwork
+    from new_betterer_version.agents.deep_q import DeepQLearning
+    from new_betterer_version.environments.flappybird import FlappyBird
+    from new_betterer_version.q_network import QNetwork
 
     nn = ks.models.Sequential()
     nn.add(ks.layers.Dense(32, activation='sigmoid', input_shape=(8,)))
@@ -21,14 +21,14 @@ if __name__ == '__main__':
 
     def normalize_state(s):
         o = np.zeros(shape=(1, 8))
-        o[0, 0] = s.observation['player_y'] / height
-        o[0, 1] = s.observation['player_vel']
-        o[0, 2] = s.observation['next_pipe_dist_to_player'] / width
-        o[0, 3] = s.observation['next_pipe_top_y'] / (height / 2)
-        o[0, 4] = s.observation['next_pipe_bottom_y'] / (height / 2)
-        o[0, 5] = s.observation['next_next_pipe_dist_to_player'] / width
-        o[0, 6] = s.observation['next_next_pipe_top_y'] / (height / 2)
-        o[0, 7] = s.observation['next_next_pipe_bottom_y'] / (height / 2)
+        o[0, 0] = s.state['player_y'] / height
+        o[0, 1] = s.state['player_vel']
+        o[0, 2] = s.state['next_pipe_dist_to_player'] / width
+        o[0, 3] = s.state['next_pipe_top_y'] / (height / 2)
+        o[0, 4] = s.state['next_pipe_bottom_y'] / (height / 2)
+        o[0, 5] = s.state['next_next_pipe_dist_to_player'] / width
+        o[0, 6] = s.state['next_next_pipe_top_y'] / (height / 2)
+        o[0, 7] = s.state['next_next_pipe_bottom_y'] / (height / 2)
         return o
 
 

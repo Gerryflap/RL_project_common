@@ -2,10 +2,10 @@ from collections import deque
 
 import numpy as np
 
-from agent import Agent
-from core import DiscreteEnvironment
-from policy import EpsilonGreedy
-from q_network import QNetwork
+from new_betterer_version.agent import Agent
+from new_betterer_version.core import FiniteActionEnvironment
+from new_betterer_version.policy import EpsilonGreedyPolicy
+from new_betterer_version.q_network import QNetwork
 
 
 class DeepQLearning(Agent):
@@ -13,7 +13,7 @@ class DeepQLearning(Agent):
         Deep Q Learning algorithm implementation
     """
 
-    def __init__(self, env: DiscreteEnvironment, q_network: QNetwork, gamma: float = 1.0, minibatch_size: int = 32):
+    def __init__(self, env: FiniteActionEnvironment, q_network: QNetwork, gamma: float = 1.0, minibatch_size: int = 32):
         """
         Create a new Deep Q Learning agent
         :param env: The environment the algorithm is subjected to
@@ -25,15 +25,13 @@ class DeepQLearning(Agent):
         self.env = env
         self.q_network = q_network
         self.replay_memory = deque(maxlen=3000)
-        self.policy = EpsilonGreedy(env.observation_space,
-                                    env.valid_actions,
-                                    q_source=self.q_network,  # Use the neural network to estimate Q
-                                    epsilon=lambda x: 0.05    # Keep epsilon constant
-                                    )
+        self.policy = self.q_network.derive_policy(EpsilonGreedyPolicy,
+                                                   env.valid_actions_from,
+                                                   epsilon=lambda x: 0.05)
         self.minibatch_size = minibatch_size
         self.gamma = gamma
 
-    def learn(self, num_episodes=100000) -> EpsilonGreedy:
+    def learn(self, num_episodes=100000) -> EpsilonGreedyPolicy:
         """
         Train the Q-Network
         :param num_episodes: Number of episodes that should be run
@@ -43,7 +41,7 @@ class DeepQLearning(Agent):
         for e in range(num_episodes):
             s = self.env.reset()                            # Initialize the environment
             while not s.is_terminal():                      # Repeat until environment is terminal:
-                a = pi(s)                                   # - Epsilon-greedily pick an action
+                a = pi.sample(s)                            # - Epsilon-greedily pick an action
                 s_p, r = self.env.step(a)                   # - Perform the action, obtain feedback
                 self.add_to_replay_memory(s, a, r, s_p)     # - Store result as sample to be trained on
                 Q.fit_on_samples(self.sample_minibatch())   # - Train the model on a random batch of samples
@@ -72,7 +70,7 @@ class DeepQLearning(Agent):
 
 if __name__ == '__main__':
     import keras as ks
-    from environments.cartpole import CartPole
+    from new_betterer_version.environments.cartpole import CartPole
 
     nn = ks.models.Sequential()
     nn.add(ks.layers.Dense(32, activation='sigmoid', input_shape=(4,)))

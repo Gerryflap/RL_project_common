@@ -1,7 +1,6 @@
 import collections
 
-from core import Observation, Action, DiscreteEnvironment
-from q_estimator import QEstimator
+from new_betterer_version.q_estimator import QEstimator
 
 
 class QTable(collections.MutableMapping, QEstimator):
@@ -9,52 +8,42 @@ class QTable(collections.MutableMapping, QEstimator):
         Q Table implementation
     """
 
-    def __init__(self, observation_space=Observation, action_space=Action, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         """
         Create a new Q Table
-        :param observation_space: The class of observations that are stored in this Q Table
-        :param action_space: The class of actions that are stored in this Q Table
         """
         self.store = dict()
         self.update(dict(*args, **kwargs))
-        self.observation_space = observation_space
-        self.action_space = action_space
 
     def __getitem__(self, key: tuple) -> float:
         """
         Get the Q-value corresponding to the given key
-        :param key: A two-tuple of (observation, action)
-        :return: The Q-value corresponding to the (observation, action) pair. Return 0 if the pair is not in this table
+        :param key: A two-tuple of (state, action)
+        :return: The Q-value corresponding to the (state, action) pair. Return 0 if the pair is not in this table
         """
         s, a = key
-        if not isinstance(s, self.observation_space) or not isinstance(a, self.action_space):
-            raise KeyError
         return self.store.get(s, dict()).get(a, 0)
 
     def __setitem__(self, key: tuple, value: float):
         """
-        Set a Q-value for a given (observation, action) pair
-        :param key: Two-tuple of (observation, action)
+        Set a Q-value for a given (state, action) pair
+        :param key: Two-tuple of (state, action)
         :param value: Q-value corresponding to the key
         """
         s, a = key
-        if not isinstance(s, self.observation_space) or not isinstance(a, self.action_space):
-            raise KeyError
         self.store.setdefault(s, dict())[a] = value
 
     def __delitem__(self, key: tuple):
         """
         Remove an entry from this table
-        :param key: The (observation, action) pair of the entry that should be removed
+        :param key: The (state, action) pair of the entry that should be removed
         """
         s, a = key
-        if not isinstance(s, self.observation_space) or not isinstance(a, self.action_space):
-            raise KeyError
         del self.store[s][a]
 
     def __iter__(self):
         """
-        :return: An iterator that iterates through all (observation, action) pairs stored in this table
+        :return: An iterator that iterates through all (state, action) pairs stored in this table
         """
         for state, actions in self.store.items():
             for action in iter(actions):
@@ -78,37 +67,30 @@ class QTable(collections.MutableMapping, QEstimator):
         t += '+------------------------------------------+----------+\n'
         return t
 
-    def Q(self, observation, action):
+    def Q(self, state, action):
         """
-        Obtain the Q-value for performing the specified action given the observation
-        :param observation: The obtained observation
+        Obtain the Q-value for performing the specified action given the state
+        :param state: The obtained state
         :param action: The action to be performed
         :return: the corresponding Q-value
         """
-        return self[observation, action]
+        return self[state, action]
 
-    def Qs(self, observation, actions):
+    def Qs(self, state, actions):
         """
-        Obtain all Q-values for multiple possible actions given the observation
-        :param observation: The obtained observation
+        Obtain all Q-values for multiple possible actions given the state
+        :param state: The obtained state
         :param actions: A list of actions for which the Q-value should be obtained
         :return: A dictionary mapping each action to the corresponding Q-value
         """
-        return {a: self[observation, a] for a in actions}
-
-
-def for_env(env: DiscreteEnvironment):
-    """
-    Create a Q Table with the environment's observation and action spaces
-    :param env: the corresponding environment
-    :return: the Q Table
-    """
-    return QTable(env.observation_space, env.action_space)
+        return {a: self[state, a] for a in actions}
 
 
 if __name__ == '__main__':
+    from new_betterer_version.core import Action, State
 
-    class TestObject(Action, Observation):
+
+    class TestObject(Action, State):
 
         def __init__(self, value):
             super().__init__(terminal=False)
