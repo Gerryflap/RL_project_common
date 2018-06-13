@@ -134,7 +134,7 @@ class EpsilonGreedyPolicy(Policy):
         """
         if np.random.random() < self.epsilon(state):
             actions = self._actions_from(state)
-            return actions[np.random.randint(0, len(actions) - 1)]  # Sample uniformly
+            return actions[np.random.randint(0, len(actions))]  # Sample uniformly
         else:
             return super(EpsilonGreedyPolicy, self).sample(state)   # Sample greedily
 

@@ -4,23 +4,25 @@ import numpy as np
 from agent import Agent
 from core import FiniteActionEnvironment
 from policy import EpsilonGreedyPolicy
-from q_network import QNetwork
+from q_network_sarsa_lambda import QNetworkSL
 
 
 class DeepSarsa(Agent):
 
     def __init__(self,
                  env: FiniteActionEnvironment,
-                 model: QNetwork,
-                 lam: float = 0.2,
-                 gamma: float=1.0,
+                 model: QNetworkSL,
                  replay_memory_size: int=3000,
                  minibatch_size: int=32,
+                 epsilon=0.05,
+                 epsilon_step_factor=1.0,
+                 epsilon_min = 0.0
                  ):
         super().__init__(env)
+        self.epsilon_step_factor = epsilon_step_factor
+        self.epsilon_min = epsilon_min
         self.qnetwork = model
-        self.lam = lam
-        self.gamma = gamma
+        self.epsilon_v = epsilon
         self.policy = model.derive_policy(EpsilonGreedyPolicy,
                                           env.valid_actions_from,
                                           epsilon=self.epsilon)
@@ -31,14 +33,22 @@ class DeepSarsa(Agent):
         Q, pi = self.qnetwork, self.policy
         for _ in range(num_episodes):
             s = self.env.reset()
-            a = pi.sample(s)
+
             trajectory = []
             while not s.is_terminal():
+                a = pi.sample(s)
                 s_p, r = self.env.step(a)
-                a_p = pi.sample(s_p)
-                trajectory += [(s, a, r, s_p, a_p)]
-                # TODO -- train network
-                s, a = s_p, a_p
+                trajectory += [(s, a, r)]
+
+                # Train Q-network
+                if len(self.replay_memory) > 0:
+                    mini_batch = self.sample_minibatch()
+                    self.qnetwork.fit_on_trajectories(mini_batch)
+                if self.epsilon_v > self.epsilon_min:
+                    self.epsilon_v *= self.epsilon_step_factor
+                else:
+                    self.epsilon_v = self.epsilon_min
+                s = s_p
 
             self.store_in_replay_memory(trajectory)
             pass
@@ -46,16 +56,20 @@ class DeepSarsa(Agent):
         return pi
 
     def epsilon(self, state):
-        pass  # TODO
+        return self.epsilon_v
 
     def sample_minibatch(self) -> list:
         """
         Get a random minibatch of samples from current replay memory
         :return: A list of samples
         """
-        ixs = np.random.choice(range(len(self.replay_memory)),  # Sample random indices to take samples from
-                               size=self.minibatch_size)
-        return [self.replay_memory[i] for i in ixs]             # TODO -- faster by sorting ixs
+        batch = []
+        for i in range(self.minibatch_size):
+            trajectory = self.replay_memory[np.random.randint(0, len(self.replay_memory))]
+            trajectory = trajectory[np.random.randint(0, len(trajectory)):]
+            batch.append(trajectory)
+        return batch
+
 
     def store_in_replay_memory(self, trajectory):
         self.replay_memory.append(trajectory)

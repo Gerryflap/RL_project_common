@@ -9,7 +9,7 @@ class QNetworkSL(QEstimator):
         Deep SARSA(λ)-Network class that wraps around a suitable Keras model
     """
 
-    def __init__(self, model: ks.Model, out_map: list, feature_ex: callable=lambda x: x, gamma: float=1.0, lambd: float=0.0, fixed_length=100):
+    def __init__(self, model: ks.Model, out_map: list, feature_ex: callable=lambda x: x, gamma: float=1.0, lambd: float=0.0, fixed_length=100, reward_factor=1.0):
         """
         Create a new Deep SARSA(λ)-Network
         :param model: Keras model to be used in the network
@@ -30,6 +30,7 @@ class QNetworkSL(QEstimator):
         self.lambd = lambd
         self.fixed_length = fixed_length
         self.training_steps_since_sync = 0
+        self.reward_factor = reward_factor
 
     def Q(self, state, action) -> float:
         """
@@ -62,13 +63,13 @@ class QNetworkSL(QEstimator):
         Train the network on a minibatch of trajectories
         :param trajectories: A list of Trajectories consisting of three-tuples (State, Action, Reward)
         """
-        initial_states = list([t[0][0] for t in trajectories])
+        initial_states = np.array([self.phi(t[0][0])[0] for t in trajectories])
 
         # Initialize the target Q-values with the current output
         target_qs = self.live_model.predict(initial_states)
 
         for i, trajectory in enumerate(trajectories):
-            states = list([t[0] for t in trajectory])
+            states = np.array([self.phi(t[0])[0] for t in trajectory])
             if len(states) > 1:
                 # Shorten the states such that the current state is not in there
                 fixed_qs = self.live_model.predict(states[1:])
@@ -79,12 +80,11 @@ class QNetworkSL(QEstimator):
             for j in range(len(trajectory)):
                 s, a, r = trajectory[j]
 
-                # Convert back to action index:
-                a = self.action_index_map[a]
+                r *= self.reward_factor
 
                 terminal_state = j == len(trajectory) - 1
                 if not terminal_state:
-                    sp, ap, _ = trajectory[j+1]
+                    _, ap, _ = trajectory[j+1]
 
                     # Convert back to action index:
                     ap = self.action_index_map[ap]
@@ -97,7 +97,7 @@ class QNetworkSL(QEstimator):
                 else:
                     n_return = total_discounted_reward + self.gamma**(j+1) * fixed_qs[j, ap]
                 q_return += self.lambd ** j * n_return
-
+            q_return *= (1 - self.lambd)
             action = trajectory[0][1]
             action = self.action_index_map[action]
 
@@ -109,6 +109,8 @@ class QNetworkSL(QEstimator):
         # If we have reached a certain number of updates, sync the fixed weights
         if self.training_steps_since_sync >= self.fixed_length:
             self.fixed_model.set_weights(self.live_model.get_weights())
+            self.training_steps_since_sync = 0
+
 
 
 
