@@ -25,7 +25,7 @@ if __name__ == '__main__':
                      )
 
     dql = DeepSarsa(env, dqn,
-                    epsilon=0.9,
+                    epsilon=0.3,
                     epsilon_step_factor=0.99995,
                     epsilon_min=0.05,
                     replay_memory_size=1000
