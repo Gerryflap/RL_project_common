@@ -1,7 +1,7 @@
 import numpy as np
 import keras as ks
 
-from new_betterer_version.q_estimator import QEstimator
+from q_estimator import QEstimator
 
 
 class QNetwork(QEstimator):

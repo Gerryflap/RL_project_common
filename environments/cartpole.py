@@ -1,6 +1,6 @@
 import gym
 
-from new_betterer_version.core import State, Action, FiniteActionEnvironment
+from core import State, Action, FiniteActionEnvironment
 
 """
     Environment wrapper for OpenAI Gym's CartPole

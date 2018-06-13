@@ -1,4 +1,4 @@
-from new_betterer_version.policy import Policy
+from policy import Policy
 
 
 class QEstimator:

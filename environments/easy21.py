@@ -1,6 +1,6 @@
 import random
 
-from new_betterer_version.core import State, Action, FiniteActionEnvironment
+from core import State, Action, FiniteActionEnvironment
 
 '''
     Easy21 environment implementation as defined in 

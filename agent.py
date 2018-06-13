@@ -1,5 +1,5 @@
-from new_betterer_version.core import Environment
-from new_betterer_version.policy import Policy
+from core import Environment
+from policy import Policy
 
 
 class Agent:

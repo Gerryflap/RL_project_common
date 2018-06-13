@@ -1,6 +1,6 @@
 import collections
 
-from new_betterer_version.q_estimator import QEstimator
+from q_estimator import QEstimator
 
 
 class QTable(collections.MutableMapping, QEstimator):
@@ -87,7 +87,7 @@ class QTable(collections.MutableMapping, QEstimator):
 
 
 if __name__ == '__main__':
-    from new_betterer_version.core import Action, State
+    from core import Action, State
 
 
     class TestObject(Action, State):

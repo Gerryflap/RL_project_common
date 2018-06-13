@@ -3,7 +3,7 @@ import pygame
 from ple import PLE
 from ple.games import Pixelcopter
 
-from new_betterer_version.core import State, Action, FiniteActionEnvironment
+from core import State, Action, FiniteActionEnvironment
 
 """
     PixelCopter Environment wrapper for PyGame Learning Environment's PixelCopter

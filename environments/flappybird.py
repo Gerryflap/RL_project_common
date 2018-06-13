@@ -3,7 +3,7 @@ import pygame
 from ple import PLE
 import ple.games
 
-from new_betterer_version.core import State, Action, FiniteActionEnvironment
+from core import State, Action, FiniteActionEnvironment
 
 """
     Flappy Bird Environment wrapper for PyGame Learning Environment's Flappy Bird

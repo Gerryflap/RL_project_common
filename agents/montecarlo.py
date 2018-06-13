@@ -1,9 +1,9 @@
 from collections import defaultdict
 
-from new_betterer_version.agent import Agent
-from new_betterer_version.core import FiniteActionEnvironment
-from new_betterer_version.policy import EpsilonGreedyPolicy
-from new_betterer_version.q_table import QTable
+from agent import Agent
+from core import FiniteActionEnvironment
+from policy import EpsilonGreedyPolicy
+from q_table import QTable
 
 
 class MonteCarlo(Agent):
@@ -56,7 +56,7 @@ class MonteCarlo(Agent):
 if __name__ == '__main__':
     import numpy as np
     import matplotlib.pyplot as plt
-    from new_betterer_version.environments.easy21 import Easy21
+    from environments.easy21 import Easy21
 
     _env = Easy21()
 

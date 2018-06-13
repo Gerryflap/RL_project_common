@@ -2,9 +2,9 @@
 if __name__ == '__main__':
     import keras as ks
     import numpy as np
-    from new_betterer_version.agents.deep_q import DeepQLearning
-    from new_betterer_version.environments.flappybird import FlappyBird
-    from new_betterer_version.q_network import QNetwork
+    from agents.deep_q import DeepQLearning
+    from environments.flappybird import FlappyBird
+    from q_network import QNetwork
 
     nn = ks.models.Sequential()
     nn.add(ks.layers.Dense(32, activation='sigmoid', input_shape=(8,)))
