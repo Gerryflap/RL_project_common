@@ -40,7 +40,7 @@ class H5Logger():
         if self.configuration is None:
             raise ValueError("A configuration was never initialized.")
         print("Writing experiment results to %s/%s" % (self.session, self.dataset_name))
-        self.dataset_name = "results_%s" % (datetime.datetime.now ()
+        self.dataset_name = "results_%s" % (datetime.datetime.now ())
         self.dataset = self.h5.create_dataset("%s/%s" % (self.session, self.dataset_name), res.shape, dtype="f", compression="gzip")
         self.dataset.attrs['configuration'] = self.configuration
         self.dataset[:] = res
