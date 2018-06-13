@@ -16,6 +16,9 @@ class QNetworkSL(QEstimator):
         :param out_map: A list of actions mapping the model's output to actions (by index)
         :param feature_ex: Function that is applied on a state to transform it into suitable input for the model
         :param gamma: Reward discount factor
+        :param lambd: Lambda value
+        :param fixed_length: Denotes the number of steps before the fixed network gets synced with the live network
+        :param reward_factor: A scaling factor on the rewards. Allows for scaling the rewards if they become too large
         """
         assert (None, len(out_map)) == model.output_shape  # Make sure all outputs can be mapped to actions
         self.live_model = model
@@ -68,7 +71,10 @@ class QNetworkSL(QEstimator):
         # Initialize the target Q-values with the current output
         target_qs = self.live_model.predict(initial_states)
 
+        # Calculate the target q values for each of the trajectories in the minibatch:
         for i, trajectory in enumerate(trajectories):
+
+            # Get all states in the trajectory:
             states = np.array([self.phi(t[0])[0] for t in trajectory])
             if len(states) > 1:
                 # Shorten the states such that the current state is not in there
@@ -77,6 +83,7 @@ class QNetworkSL(QEstimator):
             q_return = 0
             total_discounted_reward = 0
 
+            # Calculate all TD(n) returns and add them to the total to get TD(lambda)
             for j in range(len(trajectory)):
                 s, a, r = trajectory[j]
 
@@ -97,6 +104,8 @@ class QNetworkSL(QEstimator):
                 else:
                     n_return = total_discounted_reward + self.gamma**(j+1) * fixed_qs[j, ap]
                 q_return += self.lambd ** j * n_return
+
+            # TODO: Find out why this is valid (comes from the slides). It shouldn't work for lambda = 1
             q_return *= (1 - self.lambd)
             action = trajectory[0][1]
             action = self.action_index_map[action]
