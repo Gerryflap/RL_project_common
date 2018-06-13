@@ -25,14 +25,25 @@ class Logger():
             f.write( str(result) )
             f.write("\n")
 
-            
-        
+class H5Logger():
+    def __init__(self, session=None, configuration=None, filename="results.hdf5"):
+        self.session = session or "session_%s" % ( datetime.datetime.now() )
+        self.configuration = configuration
+        self.h5_filename = filename
+        self.h5 = h5py.File(filename, "a")
+        #grp = f.create_group('%s' % session)
     
+    def start_experiment(configuration = None):
+        return H5Logger(session=self.session, configuration=configuration, filename=self.h5_filename)
 
-        
-    
-
-
+    def result(self, res):
+        if self.configuration is None:
+            raise ValueError("A configuration was never initialized.")
+        print("Writing experiment results to %s/%s" % (self.session, self.dataset_name))
+        self.dataset_name = "results_%s" % (datetime.datetime.now ()
+        self.dataset = self.h5.create_dataset("%s/%s" % (self.session, self.dataset_name), res.shape, dtype="f", compression="gzip")
+        self.dataset.attrs['configuration'] = self.configuration
+        self.dataset[:] = res
 
 
 def configurable(init):
