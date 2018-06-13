@@ -3,7 +3,9 @@ import environments.wrappers.standardized_env_wrapper as wrapper
 import agents.deep_sarsa_lambda as dsl
 import tensorflow as tf
 import numpy as np
+from experiment_util import H5Logger as Logger
 ks = tf.keras
+
 
 
 neural_network = ks.models.Sequential()
@@ -19,11 +21,20 @@ agent = dsl.DeepSARSALambdaAgent(0.9, env.action_space, neural_network, (4,),
                                  alpha=0.0001, reward_scale=0.01, gamma=0.9, replay_mem_size=1000)
 
 
+my_current_configuration = agent.get_configuration()
+my_logger = Logger()
+my_experiment_logger = my_logger.start_experiment(my_current_configuration)
 
-while True:
-    scores = []
-    for i in range(5):
-        score = agent.run_episode(env)
-        scores.append(score)
-    print("Average score: ", np.mean(scores))
-    agent.run_episode(env, True)
+
+try:
+    while True:
+        scores = []
+        for i in range(5):
+            score = agent.run_episode(env, result_handler=my_experiment_logger.log)
+            scores.append(score)
+        print("Average score: ", np.mean(scores))
+        agent.run_episode(env, True)
+except KeyboardInterrupt:
+    my_experiment_logger.end_experiment()
+    print("The experiment has ended")
+

@@ -190,7 +190,7 @@ class DeepSARSALambdaAgent(Configurable):
                 self.update_fixed_q()
             self.step += 1
 
-    def run_episode(self, env, visual=False):
+    def run_episode(self, env, visual=False, result_handler=None):
         """
         Runs an episode on the provided environment.
         Also collects experiences and trains the network (if not running in visual mode).
@@ -221,6 +221,8 @@ class DeepSARSALambdaAgent(Configurable):
         if not visual:
             trajectory.append((s, a_i, 0, "TERMINAL", 0))
             self.store_experience(trajectory)
+        if callable(result_handler):
+            result_handler(score)
         return score
 
     def update_fixed_q(self):

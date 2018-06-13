@@ -4,6 +4,7 @@ import collections
 
 import datetime
 import tensorflow as tf
+import h5py
 
 class Logger():
     def __init__(self):
@@ -26,25 +27,34 @@ class Logger():
             f.write("\n")
 
 class H5Logger():
-    def __init__(self, session=None, configuration=None, filename="results.hdf5"):
+    def __init__(self, session=None, configuration=None, filename="results1.hdf5"):
         self.session = session or "session_%s" % ( datetime.datetime.now() )
         self.configuration = configuration
         self.h5_filename = filename
-        self.h5 = h5py.File(filename, "a")
         #grp = f.create_group('%s' % session)
-    
-    def start_experiment(configuration = None):
-        return H5Logger(session=self.session, configuration=configuration, filename=self.h5_filename)
 
-    def result(self, res):
+    def __setup_experiment__(self):
+        self.h5 = h5py.File(self.h5_filename, "a")
         if self.configuration is None:
             raise ValueError("A configuration was never initialized.")
-        print("Writing experiment results to %s/%s" % (self.session, self.dataset_name))
         self.dataset_name = "results_%s" % (datetime.datetime.now ())
-        self.dataset = self.h5.create_dataset("%s/%s" % (self.session, self.dataset_name), res.shape, dtype="f", compression="gzip")
-        self.dataset.attrs['configuration'] = self.configuration
-        self.dataset[:] = res
+        print("Writing experiment results to %s/%s" % (self.session, self.dataset_name))
+        self.dataset = self.h5.create_dataset("%s/%s" % (self.session, self.dataset_name), (0,), dtype="f", compression="gzip", maxshape=(None,))
+        self.dataset.attrs['configuration'] = str(self.configuration)
+        
 
+    def start_experiment(self, configuration = None):
+        logger = H5Logger(session=self.session, configuration=configuration, filename=self.h5_filename)
+        logger.__setup_experiment__()
+        return logger
+
+    def log(self, res):
+        self.dataset.resize(self.dataset.shape[0]+1, axis=0)
+        self.dataset[self.dataset.shape[0]-1] = res
+
+    def end_experiment(self):
+        self.h5.flush()
+        self.h5.close()
 
 def configurable(init):
     '''
