@@ -1,6 +1,40 @@
 from abc import ABCMeta
 from inspect import getcallargs, getargspec, getfullargspec, getargvalues, currentframe
-import collections        
+import collections
+
+import datetime
+import tensorflow as tf
+
+class Logger():
+    def __init__(self):
+        self.runs = dict()
+        self.session_ref = "experiments_%s.log"%(datetime.datetime.now().isoformat())
+
+    
+    def start_experiment(self, configuration ):
+        ref = "results_%s" % datetime.datetime.now().isoformat()
+        self.runs[ref] =  "%s.log" % ref
+            
+        with open(self.session_ref, "a") as f:
+            f.write( str({'log_file': self.runs[ref], 'configuration': configuration}))
+            f.write("\n")
+        return ref
+
+    def log_result(self, ref, result ):
+        with open(self.runs[ref], "a") as f:
+            f.write( str(result) )
+            f.write("\n")
+
+            
+        
+    
+
+        
+    
+
+
+
+
 def configurable(init):
     '''
     This is a decorator function that catches the arguments applied to a function call.
@@ -84,7 +118,10 @@ class Configurable(metaclass=ABCMeta):
                 return (k, v.__class__.__name__) # refer to object as its classname
             if k is not "self" and isinstance(v, Configurable):
                 return (k, v.get_configuration())
+            if k is not "self" and isinstance(v, tf.keras.models.Model):
+                return (k, v.to_json())
             return (k,v)
+        
         if c is None: #base case
             if not hasattr(self, "__defaultConfiguration__"):
                 raise ValueError("Did you mark your configuration function of %s @configurable?" % self)
@@ -92,3 +129,5 @@ class Configurable(metaclass=ABCMeta):
             return self.get_configuration({**self.__defaultConfiguration__, **self.__configuration__})
         else: # resolve recusrive configurations
             return dict(solve(k,v) for k,v in c.items())
+
+
