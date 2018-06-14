@@ -9,7 +9,17 @@ class QNetworkSL(QEstimator):
         Deep SARSA(λ)-Network class that wraps around a suitable Keras model
     """
 
-    def __init__(self, model: ks.Model, out_map: list, feature_ex: callable=lambda x: x, gamma: float=1.0, lambd: float=0.0, fixed_length=100, reward_factor=1.0):
+    def __init__(
+            self,
+            model: ks.Model,
+            out_map: list,
+            feature_ex: callable=lambda x: x,
+            gamma: float=1.0,
+            lambd: float=0.0,
+            fixed_length=100,
+            reward_factor=1.0,
+            fix_lambda_skew=True
+    ):
         """
         Create a new Deep SARSA(λ)-Network
         :param model: Keras model to be used in the network
@@ -19,7 +29,13 @@ class QNetworkSL(QEstimator):
         :param lambd: Lambda value
         :param fixed_length: Denotes the number of steps before the fixed network gets synced with the live network
         :param reward_factor: A scaling factor on the rewards. Allows for scaling the rewards if they become too large
+        :param fix_lambda_skew: Fixes an issue arising from finite trajectories.
+            Officially the lambda returns are scaled with (1-λ) * λ^k, which would result in a sum of 1 when taking
+            k to infinity. In a practical situation, trajectories are not infinite an thus this scaling needs to be
+            different. When this parameter is set to true, the total return will be divided by the sum of
+            lambdas (λ^0 + λ^1 ... λ^n) instead. This will make the sum of lambda weights 1 again.
         """
+        self.fix_lambda_skew = fix_lambda_skew
         assert (None, len(out_map)) == model.output_shape  # Make sure all outputs can be mapped to actions
         self.live_model = model
         # Copy the model config:
@@ -82,6 +98,8 @@ class QNetworkSL(QEstimator):
 
             q_return = 0
             total_discounted_reward = 0
+            # Used for fixing the "lambda skew" caused by the infinity assumption in the lambda return function
+            lambda_sum = 0
 
             # Calculate all TD(n) returns and add them to the total to get TD(lambda)
             for j in range(len(trajectory)):
@@ -104,9 +122,14 @@ class QNetworkSL(QEstimator):
                 else:
                     n_return = total_discounted_reward + self.gamma**(j+1) * fixed_qs[j, ap]
                 q_return += self.lambd ** j * n_return
+                lambda_sum += self.lambd ** j
 
             # TODO: Find out why this is valid (comes from the slides). It shouldn't work for lambda = 1
-            q_return *= (1 - self.lambd)
+            if not self.fix_lambda_skew:
+                q_return *= (1 - self.lambd)
+            else:
+                q_return /= lambda_sum
+
             action = trajectory[0][1]
             action = self.action_index_map[action]
 
