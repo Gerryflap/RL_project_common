@@ -49,6 +49,8 @@ class PuckWorldAction(Action):
 class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
     """
         PuckWorld Environment class
+
+        Built around a wrapper around PLE's PuckWorld
     """
 
     # Define all possible actions in this environment
@@ -91,7 +93,7 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
 
         self.ple = PLE(self.game)
         self.ple.init()
-        self.epsilon = 1.5 * self.game.good_creep.radius  # Size of epsilon-region around goal state
+        self.epsilon = 2 * self.game.good_creep.radius  # Size of epsilon-region around goal state
 
         self.terminal = False
         self.reset()
