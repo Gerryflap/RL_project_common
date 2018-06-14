@@ -12,6 +12,7 @@
     For OpenAI gym environments one can use the relatively light GymEnvWrapper provided in this file.
 
 """
+import math
 
 import tensorflow as tf
 import numpy as np
@@ -23,7 +24,7 @@ from experiment_util import Configurable
 class DeepSARSALambdaAgent(Configurable):
     def __init__(self, lambd, action_space, model: ks.models.Model, state_shape, alpha=0.001, epsilon=0.1, gamma=1.0,
                  state_transformer=lambda s: s, epsilon_step_factor=1.0, epsilon_min=0.0, replay_mem_size=1000,
-                 fixed_steps=100, batch_size=32, reward_scale=1.0):
+                 fixed_steps=100, batch_size=32, reward_scale=1.0, lambda_lower_bound=0.0):
         """
         Initializes the Deep SARSA-λ Agent.
         :param lambd: The value for lambda. The target Q-values are calculated using TD(λ),
@@ -71,6 +72,12 @@ class DeepSARSALambdaAgent(Configurable):
         self.replay_mem_size = replay_mem_size
         self.fixed_steps = fixed_steps
         self.batch_size = batch_size
+        self.lambda_lower_bound = lambda_lower_bound
+        if lambda_lower_bound == 0:
+            self.max_trajectory_length = None
+        else:
+            self.max_trajectory_length = int(math.log(lambda_lower_bound, lambd))
+            print("Max trajectory length is ", self.max_trajectory_length)
 
     def Q(self, s):
         """
@@ -128,6 +135,7 @@ class DeepSARSALambdaAgent(Configurable):
             trajectory = random.choice(self.replay_memory)
             index = random.randint(0, len(trajectory) - 1)
             trajectory = trajectory[index:]
+            #trajectory = trajectory[:self.max_trajectory_length+1]
             trajectories.append(trajectory)
 
         # TODO: Fix the fact that this literally makes it 2 seconds slower:
@@ -140,11 +148,18 @@ class DeepSARSALambdaAgent(Configurable):
 
             # Calculate all target Q-values for the trajectory
             if len(trajectory) > 1:
-                states = np.array([experience[3] for experience in trajectory[:-1]])
+                if self.max_trajectory_length:
+                    states = np.array([experience[3] for experience in trajectory[:-1][:self.max_trajectory_length]])
+                else:
+                    states = np.array([experience[3] for experience in trajectory[:-1]])
+
                 q_values = self.fixed_model.predict(states)
             else:
                 q_values = None
-            for j, (s, a_i, r, s_p, a_i_p) in enumerate(trajectory):
+            short_trajectory = trajectory
+            if self.max_trajectory_length:
+                short_trajectory = trajectory[:self.max_trajectory_length]
+            for j, (s, a_i, r, s_p, a_i_p) in enumerate(short_trajectory):
                 total_reward += r * self.gamma ** j
                 if j == len(trajectory) - 1:
                     n_return = total_reward
@@ -211,16 +226,16 @@ class DeepSARSALambdaAgent(Configurable):
         while not env.terminated:
             s_p, r = env.step(a)
             a_p, a_i_p, _ = self.get_action(s_p)
-            if not visual:
-                trajectory.append((s, a_i, r * self.reward_scale, s_p, a_i_p))
-                if len(self.replay_memory) > 0:
-                    self.train()
+
+            trajectory.append((s, a_i, r * self.reward_scale, s_p, a_i_p))
+            if len(self.replay_memory) > 0:
+                self.train()
 
             s, a, a_i = s_p, a_p, a_i_p
             score += r
-        if not visual:
-            trajectory.append((s, a_i, 0, "TERMINAL", 0))
-            self.store_experience(trajectory)
+
+        trajectory.append((s, a_i, 0, "TERMINAL", 0))
+        self.store_experience(trajectory)
         return score
 
     def update_fixed_q(self):
@@ -236,23 +251,35 @@ class GymEnvWrapper(object):
     A wrapper for OpenAI gym environments that allows them to work with the DeepSarsaLambdaAgent
     """
 
-    def __init__(self, gym_env, state_transformer):
+    def __init__(self, gym_env, state_transformer, keep_previous_frame=False):
+        self.keep_previous_frame = keep_previous_frame
         self.env = gym_env
         self.terminated = True
         self.render = False
         self.state_transformer = state_transformer
+        self.old_state = None
 
     def reset(self):
         self.terminated = False
-        return self.state_transformer(self.env.reset())
+        self.old_state = None
+        s = self.env.reset()
+        self.old_state = s
+        if self.keep_previous_frame:
+            return self.state_transformer(s, s)
+        else:
+            return self.state_transformer(s)
 
     def step(self, action):
         s, r, done, _ = self.env.step(action)
         if self.render:
             self.env.render()
-            time.sleep(1 / 60)
         self.terminated = done
-        return self.state_transformer(s), r
+        if self.keep_previous_frame:
+            out = self.state_transformer(s, self.old_state), r
+        else:
+            out = self.state_transformer(s), r
+        self.old_state = s
+        return out
 
     def set_rendering(self, value: bool):
         self.render = value
