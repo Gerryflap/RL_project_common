@@ -12,6 +12,14 @@ import keras as ks
 
 class TaskedDualNeuralNet(object):
     def __init__(self, input_shape, shared_layers, task_specific_layers, compile_function, tasks):
+        """
+        Initializes a tasked Dual Neural Net
+        :param input_shape: The shape of the input (not including batch dimension)
+        :param shared_layers: The layers shared by all tasks (Using keras functional API)
+        :param task_specific_layers: The layers specific to a task (Using keras functional API)
+        :param compile_function: A function that takes a model and compiles it
+        :param tasks: An array of tasks
+        """
         self.input_shape = input_shape
         self.tasks = tasks
         self.compile_function = compile_function
@@ -42,5 +50,6 @@ class TaskedDualNeuralNet(object):
         self.live_models[task].fit(x, y, epochs=epochs, verbose=verbose, batch_size=batch_size)
 
     def sync(self):
+        # Synchronizes the fixed model with the live model
         for task in self.tasks:
             self.fixed_models[task].set_weights(self.live_models[task].get_weights())
