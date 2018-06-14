@@ -4,7 +4,7 @@ import keras as ks
 from collections import deque
 
 from core import FiniteActionEnvironment, State, Action
-from sacx.gerben.extcore import TaskEnvironment, Task
+from sacx.extcore import TaskEnvironment, Task
 from sacx.gerben.tasked_p_network import PolicyNetwork
 from sacx.gerben.tasked_q_network import QNetwork
 
@@ -27,7 +27,6 @@ class SACU:
                isinstance(env, FiniteActionEnvironment)
         self.tasks = tasks
         self.env = env
-        self.aux_env = copy.deepcopy(env)
         self.gamma = gamma
 
         self.N_learn = num_learn

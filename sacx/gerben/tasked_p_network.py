@@ -10,7 +10,7 @@ import tensorflow as tf
 def make_policy_loss(entropy_regularization):
     def policy_loss(q_values, y_pred):
         policy = y_pred
-        loss = -tf.reduce_sum(policy * q_values + entropy_regularization * tf.log(policy))
+        loss = -tf.reduce_mean(tf.reduce_sum(policy * q_values + entropy_regularization * tf.log(policy),axis=1))
         #loss = tf.reduce_sum(-tf.log(policy))
         return loss
     return policy_loss
@@ -39,7 +39,7 @@ class PolicyNetwork:
             state_shape,
             shared_layers,
             task_specific_layers,
-            lambda model: model.compile(optimizer=ks.optimizers.Adam(alpha), loss=make_policy_loss(entropy_regularization)),
+            lambda model: model.compile(optimizer=ks.optimizers.Adam(alpha, clipnorm=1.0), loss=make_policy_loss(entropy_regularization)),
             tasks
         )
         self.state_transformer = state_transformer

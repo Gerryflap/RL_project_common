@@ -20,9 +20,11 @@ class QNetwork(generic.QNetwork):
                  alpha=0.0001,
                  gamma=0.9,
                  p_network: PolicyNetwork = None,
-                 fixed_steps=1000
+                 fixed_steps=1000,
+                 reward_scale=1.0
                  ):
 
+        self.reward_scale = reward_scale
         self.fixed_steps = fixed_steps
         self.steps = 0
         self.state_transformer = state_transformer
@@ -36,6 +38,7 @@ class QNetwork(generic.QNetwork):
             self.inverse_action_lookup[a] = i
         self.state_shape = state_shape
         self.gamma = gamma
+
 
         self.model = TaskedDualNeuralNet(
             state_shape,
@@ -101,12 +104,17 @@ class QNetwork(generic.QNetwork):
         # Pick all π(a_t | state, task_id) from π(* | state, task_id) for every action taken in the trajectory
         all_action_probabilities = np.array([a[self.inverse_action_lookup[i]] for i, a in zip([e[1] for e in trajectory], policies)])
 
+
         # Pick all b(a_t | state, B) from the trajectory
         all_b_action_probabilities = np.array(([experience[3][self.inverse_action_lookup[experience[1]]] for experience in trajectory]))
+
+        #print("Pi:", all_action_probabilities)
+        #print("B:", all_b_action_probabilities)
 
         # Calculate the value of c_k for the whole trajectory
         c = all_action_probabilities / all_b_action_probabilities
 
+        #print(c)
         # Make sure that c is capped on 1, so c_k = min(1, c_k)
         c[c > 1] = 1
 
@@ -126,10 +134,10 @@ class QNetwork(generic.QNetwork):
                 expected_q_tp1 = np.sum(policies[j + 1] * q_fixed_values[j + 1])
 
                 # The delta for this lookahead
-                delta = r[task] + self.gamma * expected_q_tp1 - q_values[j, a_index]
+                delta = self.reward_scale*r[task] + self.gamma * expected_q_tp1 - q_values[j, a_index]
             else:
                 # If this is the last entry, we'll assume the Q(s_j+1, *) to be fixed on 0 as the state is terminal
-                delta = r[task] - q_values[j, a_index]
+                delta = self.reward_scale*r[task] - q_values[j, a_index]
 
             # Add this to the sum of q_deltas, where the term is multiplied by gamma and delta
             q_delta += c_product * self.gamma ** j * delta
