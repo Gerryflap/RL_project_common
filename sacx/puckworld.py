@@ -27,7 +27,7 @@ class PuckWorldState(State):
     def __init__(self, state: dict, terminal: bool):
         """
         Create a new PuckWorld State
-        :param state: a dictionary containing an state
+        :param state: a dictionary containing a state
         :param terminal: a boolean indicating whether the environment state is terminal
         """
         super().__init__(terminal)
@@ -51,23 +51,25 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         PuckWorld Environment class
     """
 
+    # Define all possible actions in this environment
     UP = PuckWorldAction('up')
     DOWN = PuckWorldAction('down')
     RIGHT = PuckWorldAction('right')
     LEFT = PuckWorldAction('left')
-
     ACTIONS = [UP, DOWN, RIGHT, LEFT]
 
+    # Map all possible actions to pygame keys
     KEYS = {UP: pygame.K_w, LEFT: pygame.K_a, RIGHT: pygame.K_d, DOWN: pygame.K_s}
 
+    # Define all auxiliary tasks in this environment
     NE_TASK = Task('ne corner')
     NW_TASK = Task('nw corner')
     SE_TASK = Task('se corner')
     SW_TASK = Task('sw corner')
     GC_TASK = Task('go green')
-
     AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK]
 
+    # Reward obtained from epsilon-region around goal state
     DELTA_SG = 1
 
     def __init__(self, duration, size: tuple = (48, 48)):
@@ -78,39 +80,77 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         super().__init__()
         self.width, self.height = size
 
-        self.game = ExtPuckWorld(width=self.width, height=self.height, duration=duration, r_m=self._r_m)
+        self.game = ExtPuckWorld(width=self.width,
+                                 height=self.height,
+                                 duration=duration,
+                                 r_m=self._r_m
+                                 )
         self.game.screen = pygame.display.set_mode(self.game.getScreenDims(), 0, 32)
         self.game.clock = pygame.time.Clock()
         self.game.rng = np.random.RandomState(24)
 
         self.ple = PLE(self.game)
         self.ple.init()
-        self.epsilon = 1.5 * self.game.good_creep.radius
+        self.epsilon = 1.5 * self.game.good_creep.radius  # Size of epsilon-region around goal state
 
         self.terminal = False
         self.reset()
 
     @staticmethod
     def auxiliary_tasks():
+        """
+        :return: A list of all auxiliary tasks
+        """
         return list(PuckWorld.AUX_TASKS)
 
     @staticmethod
+    def get_tasks():
+        return [PuckWorld.MAIN_TASK] + PuckWorld.auxiliary_tasks()
+
+    @staticmethod
     def action_space() -> list:
+        """
+        :return: A list of all actions possible in this environment
+        """
         return list(PuckWorld.ACTIONS)
 
     @staticmethod
     def valid_actions_from(state) -> list:
-        return PuckWorld.action_space()
+        """
+        Get all valid actions that are possible on the given state
+        :param state: the state on which actions should be possible
+        :return: a list of valid actions
+        """
+        return PuckWorld.action_space()  # Actions not dependent on state for this environment
 
     @staticmethod
     def _d(x1, y1, x2, y2):
+        """
+        Euclidean distance between 1 and 2
+        :param x1: x-coordinate of 1
+        :param y1: y-coordinate of 1
+        :param x2: x-coordinate of 2
+        :param y2: y-coordinate of 2
+        :return: euclidean distance between the two coordinates
+        """
         return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
     @staticmethod
     def _d_sg(s):
+        """
+        Computes the distance between given state and goal state
+        :param s: the state parameter
+        :return: the euclidean distance between the state and the goal state (that is, the player coordinates and
+                 green creep coordinates)
+        """
         return PuckWorld._d(s['player_x'], s['player_y'], s['good_creep_x'], s['good_creep_y'])
 
     def _r_m(self, s):
+        """
+
+        :param s:
+        :return:
+        """
         return PuckWorld.DELTA_SG if self._d_sg(s) <= self.epsilon else 0
 
     def _r_corner(self, s, x, y):

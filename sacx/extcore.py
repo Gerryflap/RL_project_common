@@ -26,7 +26,7 @@ class TaskEnvironment(Environment):
 
     @staticmethod
     def get_tasks():
-        return [TaskEnvironment.MAIN_TASK] + TaskEnvironment.auxiliary_tasks()
+        raise NotImplementedError
 
     def step(self, action: Action) -> tuple:
         raise NotImplementedError
