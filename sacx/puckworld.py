@@ -64,6 +64,7 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
     NW_TASK = Task('nw corner')
     SE_TASK = Task('se corner')
     SW_TASK = Task('sw corner')
+    GC_TASK = Task('go green')
 
     AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK]
 
@@ -84,7 +85,7 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
 
         self.ple = PLE(self.game)
         self.ple.init()
-        self.epsilon = self.game.good_creep.radius
+        self.epsilon = 1.5 * self.game.good_creep.radius
 
         self.terminal = False
         self.reset()
@@ -114,7 +115,16 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
 
     def _r_corner(self, s, x, y):
         x_s, y_s = s['player_x'], s['player_y']
-        return (self._d(x, y, x_s, y_s) ** 2) / (self._d(0, 0, self.width, self.height) ** 2)
+        d = self._d(x, y, x_s, y_s)
+        max_d = self._d(0, 0, self.width, self.height)
+        return (max_d - d) / max_d
+
+    def _r_green(self, s):
+        x, y = s['player_x'], s['player_y']
+        x_c, y_c = s['good_creep_x'], s['good_creep_y']
+        d = self._d(x, y, x_c, y_c)
+        max_d = self._d(0, 0, self.width, self.height)
+        return (max_d - d) / max_d
 
     def step(self, action: PuckWorldAction) -> tuple:
         """
@@ -130,10 +140,11 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         self.terminal = self.ple.game_over()
         pygame.display.update()
         return PuckWorldState(state, self.terminal), {PuckWorld.MAIN_TASK: main_reward,
-                                                      PuckWorld.NE_TASK: self._r_corner(state, 0, self.height),
-                                                      PuckWorld.NW_TASK: self._r_corner(state, self.width, self.height),
-                                                      PuckWorld.SE_TASK: self._r_corner(state, 0, 0),
-                                                      PuckWorld.SW_TASK: self._r_corner(state, self.width, 0),
+                                                      PuckWorld.NE_TASK: self._r_corner(state, 0, 0),
+                                                      PuckWorld.NW_TASK: self._r_corner(state, self.width, 0),
+                                                      PuckWorld.SE_TASK: self._r_corner(state, 0, self.height),
+                                                      PuckWorld.SW_TASK: self._r_corner(state, self.width, self.height),
+                                                      PuckWorld.GC_TASK: self._r_green(state)
                                                       }
 
     def reset(self):
