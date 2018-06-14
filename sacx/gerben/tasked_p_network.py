@@ -21,13 +21,16 @@ class PolicyNetwork:
                  state_shape,
                  action_space,
                  tasks,
-                 q_network: QNetwork,
                  shared_layers,
                  task_specific_layers,
                  state_transformer,
                  alpha=0.0001,
-                 entropy_regularization=0.1
+                 entropy_regularization=0.1,
+                 q_network: QNetwork = None,
+                 fixed_steps=1000
                  ):
+        self.fixed_steps = fixed_steps
+        self.steps = 0
         self.state_shape = state_shape
         self.action_space = action_space
         self.q_network = q_network
@@ -46,6 +49,10 @@ class PolicyNetwork:
         s = np.expand_dims(s, axis=0)
         return self.model.predict(s, task)[0]
 
+    def distribution_array(self, states, task: Task, live=True):
+        # Expects transformed states
+        return self.model.predict(states, task, live=live)
+
     def train(self, trajectories):
         for task in self.tasks:
             xs = []
@@ -59,8 +66,14 @@ class PolicyNetwork:
             q_values = np.concatenate(q_values, axis=0)
             self.model.fit(xs, q_values, task)
 
-    def sample(self, state: State, task: Task) -> Action:
-        dist = self.distribution(state, task)
+        self.steps += 1
+        if self.steps > self.fixed_steps:
+            self.steps = 0
+            self.sync()
+
+    def sample(self, state: State, task: Task, dist=None) -> Action:
+        if dist is None:
+            dist = self.distribution(state, task)
 
         choice = np.random.random()
         p_cumulative = 0
@@ -79,7 +92,14 @@ class PolicyNetwork:
         raise NotImplementedError
 
     def sample_distribution(self, state: State, task: Task) -> tuple:
-        raise NotImplementedError
+        dist = self.distribution(state, task)
+        a = self.sample(state, task, dist)
+
+        return a, dist
+
+    def sync(self):
+        self.model.sync()
+
 
 
 if __name__ == "__main__":
@@ -90,7 +110,7 @@ if __name__ == "__main__":
     def individual_net(x):
         return ks.layers.Dense(3, activation='softmax')(x)
 
-    policy = PolicyNetwork((3,), [0,1,2], [0, 1], mock.QNetwork(), shared_net, individual_net, lambda x: x, entropy_regularization=0.1)
+    policy = PolicyNetwork((3,), [0,1,2], [0, 1], shared_net, individual_net, lambda x: x, entropy_regularization=0.1, q_network=mock.QNetwork())
 
     while True:
         trajectories = []

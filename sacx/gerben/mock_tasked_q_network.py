@@ -21,5 +21,5 @@ class QNetwork(genq.QNetwork):
         return ret
         pass  # TODO: Should get a batch of states and return all fixed Qsa values for these states
 
-    def train(self):
+    def train(self, trajectories):
         pass  # TODO

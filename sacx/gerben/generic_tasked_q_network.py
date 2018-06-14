@@ -17,5 +17,5 @@ class QNetwork(object):
     def Qp_array(self, states, task):
         pass  # TODO: Should get a batch of states and return all fixed Qsa values for these states
 
-    def train(self):
+    def train(self, trajectories):
         pass  # TODO
