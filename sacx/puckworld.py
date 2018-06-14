@@ -105,6 +105,9 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
 
     @staticmethod
     def get_tasks():
+        """
+        :return: A list of all tasks
+        """
         return [PuckWorld.MAIN_TASK] + PuckWorld.auxiliary_tasks()
 
     @staticmethod
@@ -147,19 +150,31 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
 
     def _r_m(self, s):
         """
-
-        :param s:
-        :return:
+        Computes a reward according to the epsilon-region surrounding the goal state
+        :param s: the state for which the reward should be computed
+        :return: a reward
         """
         return PuckWorld.DELTA_SG if self._d_sg(s) <= self.epsilon else 0
 
     def _r_corner(self, s, x, y):
+        """
+        Compute a reward based on the distance to a corner location
+        :param s: The state for which a reward should be computed
+        :param x: The x coordinate of the corner
+        :param y: The y coordinate of the corner
+        :return: a reward
+        """
         x_s, y_s = s['player_x'], s['player_y']
         d = self._d(x, y, x_s, y_s)
         max_d = self._d(0, 0, self.width, self.height)
         return (max_d - d) / max_d
 
     def _r_green(self, s):
+        """
+        Computes a reward based on the distance to the green creep
+        :param s: The state for which a reward should be computed
+        :return: a reward
+        """
         x, y = s['player_x'], s['player_y']
         x_c, y_c = s['good_creep_x'], s['good_creep_y']
         d = self._d(x, y, x_c, y_c)
@@ -204,12 +219,25 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         return self.action_space()
 
     def sample(self):
+        """
+        :return: a uniformly sampled action from the currently available actions
+        """
         return random.choice(self.ACTIONS)
 
 
 class ExtPuckWorld(ple.games.PuckWorld):
+    """
+        Extension on PLE's PuckWorld to modifications to the environment
+    """
 
     def __init__(self, width, height, duration, r_m):
+        """
+        Create a new ExtPuckWorld
+        :param width: The width of the PuckWorld
+        :param height: The height of the PuckWorld
+        :param duration: The number of ticks an episode lasts
+        :param r_m: A function that computes the main task reward given an environment state
+        """
         super().__init__(width, height)
         self.duration = duration
         self.r_m = r_m
@@ -247,7 +275,7 @@ class ExtPuckWorld(ple.games.PuckWorld):
         )
 
         self.bad_creep = PuckCreep(
-            (self.width / 2,
+            (self.width / 2,            # Bad creep starts in the middle
              self.height / 2),
             self.CREEP_BAD,
             self.screen_dim[0] * 0.75,
@@ -279,7 +307,7 @@ class ExtPuckWorld(ple.games.PuckWorld):
         dist_to_bad = math.sqrt(dx * dx + dy * dy)
 
         if dist_to_bad < self.CREEP_BAD['radius_outer']:
-            reward = -1
+            reward = -1                                     # -1 reward for intersection with the bad creep
         else:
             reward = self.r_m(self.getGameState())
 
