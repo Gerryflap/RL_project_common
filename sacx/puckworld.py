@@ -313,10 +313,10 @@ class ExtPuckWorld(ple.games.PuckWorld):
 
         self.score += reward
 
-        if self.ticks % 500 == 0:
-            x, y = self._rngCreepPos()
-            self.good_creep.pos.x = x
-            self.good_creep.pos.y = y
+        # if self.ticks % 500 == 0:
+        #     x, y = self._rngCreepPos()
+        #     self.good_creep.pos.x = x
+        #     self.good_creep.pos.y = y
 
         ndx = 0.0 if dist_to_bad == 0.0 else dx / dist_to_bad
         ndy = 0.0 if dist_to_bad == 0.0 else dy / dist_to_bad
