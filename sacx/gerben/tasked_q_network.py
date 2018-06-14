@@ -14,7 +14,7 @@ class QNetwork:
 
     def Qp_array(self, states, task):
         ret = np.zeros((states.shape[0], 3))
-        ret[:,0] = 1
+        ret[:,task] = 1
         return ret
         pass  # TODO: Should get a batch of states and return all fixed Qsa values for these states
 

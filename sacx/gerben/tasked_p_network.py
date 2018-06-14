@@ -89,7 +89,7 @@ if __name__ == "__main__":
     def individual_net(x):
         return ks.layers.Dense(3, activation='softmax')(x)
 
-    policy = PolicyNetwork((3,), [0,1,2], [0], QNetwork(), shared_net, individual_net, lambda x: x, entropy_regularization=0.1)
+    policy = PolicyNetwork((3,), [0,1,2], [0, 1], QNetwork(), shared_net, individual_net, lambda x: x, entropy_regularization=0.1)
 
     while True:
         trajectories = []
@@ -97,6 +97,7 @@ if __name__ == "__main__":
             trajectory = [(np.random.normal(0, 1, (3,)), None, None, None) for _ in range(100)]
             trajectories.append(trajectory)
         policy.train(trajectories)
-        print(policy.distribution(np.random.normal(0, 1, (3,)), 0))
+        print("0:", policy.distribution(np.random.normal(0, 1, (3,)), 0))
+        print("1:", policy.distribution(np.random.normal(0, 1, (3,)), 1))
 
 
