@@ -47,11 +47,11 @@ class PolicyNetwork:
         actions, probabilities = zip(*dist.items())
         return np.random.choice(actions, p=probabilities)
 
-    def sample_greedy(self, state: State, task: Task) -> Action:
-        pass  # TODO
-
-    def sample_epsilon_greedy(self, state: State, task: Task) -> Action:
-        pass  # TODO
+    # def sample_greedy(self, state: State, task: Task) -> Action:
+    #     pass  # TODO?
+    #
+    # def sample_epsilon_greedy(self, state: State, task: Task) -> Action:
+    #     pass  # TODO?
 
     def sample_distribution(self, state: State, task: Task) -> tuple:
         dist = self.distribution(state, task)

@@ -1,12 +1,11 @@
 import copy
 import random
-import keras as ks
 from collections import deque
 
-from core import FiniteActionEnvironment, State, Action
+from core import FiniteActionEnvironment
 from policy import Policy
 from q_table import QTable
-from sacx.extcore import TaskEnvironment, Task
+from sacx.extcore import TaskEnvironment
 from sacx.tasked_p_network import PolicyNetwork
 from sacx.tasked_q_network import QNetwork
 
@@ -15,9 +14,6 @@ class SACQ:
 
     def __init__(self,
                  env,
-                 # qmodel: ks.Model,
-                 # amodel: ks.Model,
-                 # feature_ex: callable,
                  qmodel: QNetwork,
                  amodel: PolicyNetwork,
                  gamma: float=1.0,
@@ -113,7 +109,6 @@ class SACQ:
         for h in range(self.number_of_task_switches):
             t = h * self.steps_per_episode
             while t <= (h + 1) * self.steps_per_episode - 1:
-                # a = self.sample_action(s, tasks[h])
                 a = self.amodel.sample(s, tasks[h])
                 s, rs = self.aux_env.step(a)
                 r += self.gamma ** t * rs[task]
