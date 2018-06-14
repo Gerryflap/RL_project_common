@@ -86,6 +86,8 @@ class SACU:
     def learner(self):
         for N in range(self.N_learn):
             trajectories = self.sample_trajectories()
+
+            # TODO: Both these methods take the full trajectories at the moment, a speedup could be achieved here
             self.qmodel.train(trajectories)
             self.amodel.train(trajectories)
 
