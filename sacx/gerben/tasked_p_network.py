@@ -1,7 +1,7 @@
 from core import State, Action
 from sacx.gerben.extcore import Task
 from sacx.gerben.tasked_dual_neural_net import TaskedDualNeuralNet
-from sacx.gerben.tasked_q_network import QNetwork
+from sacx.gerben.generic_tasked_q_network import QNetwork
 import keras as ks
 import numpy as np
 import tensorflow as tf
@@ -83,13 +83,14 @@ class PolicyNetwork:
 
 
 if __name__ == "__main__":
+    import sacx.gerben.mock_tasked_q_network as mock
     def shared_net(x):
         return ks.layers.Dense(100, activation='relu')(x)
 
     def individual_net(x):
         return ks.layers.Dense(3, activation='softmax')(x)
 
-    policy = PolicyNetwork((3,), [0,1,2], [0, 1], QNetwork(), shared_net, individual_net, lambda x: x, entropy_regularization=0.1)
+    policy = PolicyNetwork((3,), [0,1,2], [0, 1], mock.QNetwork(), shared_net, individual_net, lambda x: x, entropy_regularization=0.1)
 
     while True:
         trajectories = []

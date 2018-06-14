@@ -1,8 +1,10 @@
 import numpy as np
-import sacx.gerben.generic_tasked_q_network as generic
+import sacx.gerben.generic_tasked_q_network as genq
 
 
-class QNetwork(generic.QNetwork):
+class QNetwork(genq.QNetwork):
+    def __init__(self):
+        pass
 
     def Qs(self, state, task):
         pass  # TODO
@@ -11,7 +13,7 @@ class QNetwork(generic.QNetwork):
         pass  # TODO
 
     def Q_array(self, states, task):
-        pass # TODO: Should get a batch of states and return all live Qsa values for these states
+        pass  # TODO: Should get a batch of states and return all live Qsa values for these states
 
     def Qp_array(self, states, task):
         ret = np.zeros((states.shape[0], 3))
