@@ -18,7 +18,7 @@ if __name__ == '__main__':
     actions = env.valid_actions()
 
     dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
-                     lambd=0.5,
+                     lambd=0.9,
                      gamma=0.9,
                      reward_factor=0.01,
                      fixed_length=100
