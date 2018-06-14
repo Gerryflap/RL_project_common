@@ -128,6 +128,7 @@ class QNetwork(generic.QNetwork):
         # Calculate the value of c_k for the whole trajectory
         c = all_action_probabilities / all_b_action_probabilities
 
+
         #print(c)
         # Make sure that c is capped on 1, so c_k = min(1, c_k)
         c[c > 1] = 1
@@ -137,6 +138,9 @@ class QNetwork(generic.QNetwork):
 
         # Iterate over the trajectory to calculate the expected returns
         for j, (s, a, r, _) in enumerate(trajectory):
+            # Multiply the c_product with the next c-value,
+            #   this makes any move done after a "dumb" move (according to our policy) less significant
+            c_product *= c[j]
 
             a_index = self.inverse_action_lookup[a]
 
@@ -156,9 +160,7 @@ class QNetwork(generic.QNetwork):
             # Add this to the sum of q_deltas, where the term is multiplied by gamma and delta
             q_delta += c_product * self.gamma ** j * delta
 
-            # Multiply the c_product with the next c-value,
-            #   this makes any move done after a "dumb" move (according to our policy) less significant
-            c_product *= c[j]
+
 
         return q_delta
 

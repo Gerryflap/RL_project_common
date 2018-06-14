@@ -49,24 +49,10 @@ if __name__ == '__main__':
 
 
     q_network = QNetwork((8,), actions, tasks, common_net,
-                         task_q_net, process_state, gamma=0.9, alpha=0.001, reward_scale=0.001)
+                         task_q_net, process_state, gamma=0.9, alpha=0.01, reward_scale=1, fixed_steps=5)
     p_network = PolicyNetwork((8,), actions, tasks, common_net,
-                         task_p_net, process_state, entropy_regularization=0.03, alpha=0.0001)
+                         task_p_net, process_state, entropy_regularization=0.03, alpha=0.001, fixed_steps=5)
 
-    agent = SACU(env, q_network, p_network, tasks, num_learn=1, scheduler_period=500)
-
-    # dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
-    #                  lambd=0.9,
-    #                  gamma=0.9,
-    #                  reward_factor=0.01,
-    #                  fixed_length=100
-    #                  )
-    #
-    # dql = DeepSarsa(env, dqn,
-    #                 epsilon=0.3,
-    #                 epsilon_step_factor=0.99995,
-    #                 epsilon_min=0.05,
-    #                 replay_memory_size=1000
-    #                 )
+    agent = SACU(env, q_network, p_network, tasks, num_learn=5, scheduler_period=500)
 
     agent.actor()

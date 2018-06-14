@@ -3,6 +3,8 @@ import random
 import keras as ks
 from collections import deque
 
+import numpy as np
+
 from core import FiniteActionEnvironment, State, Action
 from sacx.extcore import TaskEnvironment, Task
 from sacx.gerben.tasked_p_network import PolicyNetwork
@@ -55,6 +57,10 @@ class SACU:
 
         while True:            # Collect new trajectory from the environment
             s = self.env.reset()                        # Obtain the initial environment state
+
+            for task in self.tasks:
+                print(task, self.amodel.distribution(s, task), self.qmodel.Qs(s, task))
+
             tau = []                                    # Store trajectory as list of (state, action)-tuples
             Tau = []                                    # Store tasks that have been scheduled
             h = 0                                       # Keep track of how many tasks have been scheduled so far
@@ -70,7 +76,7 @@ class SACU:
                 s_p, rs = self.env.step(a)              # Execute action, obtain observation and rewards
                 tau.append((s, a, rs, dist))            # Add to trajectory
                 s = s_p
-                score += rs[self.tasks[0]]
+                score += np.array([rs[t] for t in self.tasks])
                 if s_p.is_terminal():
                     break
             print("Score: ", score)

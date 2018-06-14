@@ -23,18 +23,5 @@ if __name__ == '__main__':
 
     agent = SACU(env, q_network, p_network, tasks, num_learn=100)
 
-    # dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
-    #                  lambd=0.9,
-    #                  gamma=0.9,
-    #                  reward_factor=0.01,
-    #                  fixed_length=100
-    #                  )
-    #
-    # dql = DeepSarsa(env, dqn,
-    #                 epsilon=0.3,
-    #                 epsilon_step_factor=0.99995,
-    #                 epsilon_min=0.05,
-    #                 replay_memory_size=1000
-    #                 )
 
     agent.actor()
