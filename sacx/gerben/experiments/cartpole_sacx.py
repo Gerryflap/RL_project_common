@@ -13,11 +13,11 @@ if __name__ == '__main__':
 
     senv = CartPole(render=True)
     tasks = [Task("MAIN_TASK")]
-    env = MultiTaskWrapper(senv, lambda s, a, r, t: {tasks[0]: r/100}, tasks)
+    env = MultiTaskWrapper(senv, lambda s, a, r, t: {tasks[0]: r}, tasks)
     actions = env.valid_actions()
 
     q_network = QNetwork((4,), actions, tasks, ks.layers.Dense(100, activation='relu'),
-                         ks.layers.Dense(2, activation='linear'), lambda x: x.state, gamma=0.9, alpha=0.0001)
+                         ks.layers.Dense(2, activation='linear'), lambda x: x.state, gamma=0.9, alpha=0.001)
     p_network = PolicyNetwork((4,), actions, tasks, ks.layers.Dense(100, activation='relu'),
                          ks.layers.Dense(2, activation='softmax'), lambda x: x.state, entropy_regularization=0.3, alpha=0.0001)
 

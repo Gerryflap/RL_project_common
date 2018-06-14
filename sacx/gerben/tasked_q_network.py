@@ -46,7 +46,7 @@ class QNetwork(generic.QNetwork):
         )
 
     def Qs(self, state: State, task: Task):
-        pass  # TODO
+        return self.model.predict(np.expand_dims(self.state_transformer(state), axis=0), task)[0]
 
     def Q(self, state: State, action: Action, task: Task):
         pass  # TODO
@@ -60,10 +60,13 @@ class QNetwork(generic.QNetwork):
     def train(self, trajectories):
         for task in self.tasks:
             initial_states = np.stack([self.state_transformer(t[0][0]) for t in trajectories], axis=0)
+
             ys = self.model.predict(initial_states, task)
+
             for i, trajectory in enumerate(trajectories):
                 _, a, _, _ = trajectory[0]
-                ys[self.inverse_action_lookup[a]] += self.get_q_delta(trajectory, task)
+                ys[i, self.inverse_action_lookup[a]] += self.get_q_delta(trajectory, task)
+
             self.model.fit(initial_states, ys, task)
 
         self.steps += 1
@@ -86,7 +89,8 @@ class QNetwork(generic.QNetwork):
         q_delta = 0
         states = np.array([self.state_transformer(e[0]) for e in trajectory])
 
-        q_values = self.model.predict(states, task, live=False)
+        q_values = self.model.predict(states, task, live=True)
+        q_fixed_values = self.model.predict(states, task, live=False)
 
 
         # Calculate all values of π(* | state, task_id) for the trajectory for out current task
@@ -119,7 +123,7 @@ class QNetwork(generic.QNetwork):
                 # If we're not: calculate the next difference and use the Q for j+1 as well
 
                 # The Expected value of the Q(s_j+1, *) under the policy
-                expected_q_tp1 = np.sum(policies[j + 1] * q_values[j + 1])
+                expected_q_tp1 = np.sum(policies[j + 1] * q_fixed_values[j + 1])
 
                 # The delta for this lookahead
                 delta = r[task] + self.gamma * expected_q_tp1 - q_values[j, a_index]
@@ -145,8 +149,11 @@ if __name__ == "__main__":
 
     def individual_net(x):
         return ks.layers.Dense(3, activation='softmax')(x)
-    q_net = QNetwork((3,), [0,1,2], [0, 1], shared_net, individual_net, lambda x: x, alpha=0.01, gamma=0)
-    policy = PolicyNetwork((3,), [0,1,2], [0, 1], shared_net, individual_net, lambda x: x, entropy_regularization=0.1, q_network=q_net)
+
+    def individual_q_net(x):
+        return ks.layers.Dense(3, activation='linear')(x)
+    q_net = QNetwork((3,), [0,1,2], [0, 1], shared_net, individual_q_net, lambda x: x, alpha=0.01, gamma=0)
+    policy = PolicyNetwork((3,), [0,1,2], [0, 1], shared_net, individual_net, lambda x: x, entropy_regularization=100000, q_network=q_net)
     q_net.p_network = policy
 
     while True:
@@ -163,6 +170,8 @@ if __name__ == "__main__":
             trajectories.append(trajectory)
         q_net.train(trajectories)
         policy.train(trajectories)
-        print("0:", policy.distribution(np.random.normal(0, 1, (3,)), 0))
-        print("1:", policy.distribution(np.random.normal(0, 1, (3,)), 1))
+        q_net.sync()
+        policy.sync()
+        print("0:", q_net.Qs(np.random.normal(0, 1, (3,)), 0))
+        print("1:", q_net.Qs(np.random.normal(0, 1, (3,)), 1))
 
