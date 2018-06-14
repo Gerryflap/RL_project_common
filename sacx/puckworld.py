@@ -67,7 +67,7 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
     SE_TASK = Task('se corner')
     SW_TASK = Task('sw corner')
     GC_TASK = Task('go green')
-    AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK]
+    AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK, GC_TASK]
 
     # Reward obtained from epsilon-region around goal state
     DELTA_SG = 1
