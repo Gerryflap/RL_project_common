@@ -20,9 +20,13 @@ class Task:
 class TaskEnvironment(Environment):
     MAIN_TASK = Task('main')
 
-    def __init__(self):
-        self.M = TaskEnvironment.MAIN_TASK
-        self.T = list()
+    @staticmethod
+    def auxiliary_tasks():
+        raise NotImplementedError
+
+    @staticmethod
+    def get_tasks():
+        return [TaskEnvironment.MAIN_TASK] + TaskEnvironment.auxiliary_tasks()
 
     def step(self, action: Action) -> tuple:
         raise NotImplementedError
@@ -32,9 +36,3 @@ class TaskEnvironment(Environment):
 
     def sample(self):
         raise NotImplementedError
-
-    def get_tasks(self) -> list:
-        return [self.M] + self.T.copy()
-
-
-
