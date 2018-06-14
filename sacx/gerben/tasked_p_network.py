@@ -29,6 +29,21 @@ class PolicyNetwork:
                  q_network: QNetwork = None,
                  fixed_steps=1000
                  ):
+        """
+        A Tasked policy network
+        :param state_shape: The shape of the state variable WITHOUT the batch dimension
+        :param action_space: The Action space
+        :param tasks: A list of Tasks
+        :param shared_layers: The shared/common layers of the network as a function (using the keras functional API)
+        :param task_specific_layers: The task specific layers of the network as a function (using the keras functional API)
+        :param state_transformer: A function that takes a state object and transforms it to a network input
+        :param alpha: The learning rate
+        :param entropy_regularization: The entropy regularization factor for the loss function
+        :param q_network: The related Q Network instance.
+            This can be left None if it's set later (for instance by the SACU actor)
+        :param fixed_steps: The number of training steps that the fixed network is kept fixed.
+            After these steps it's updated and the step counter is reset.
+        """
         self.fixed_steps = fixed_steps
         self.steps = 0
         self.state_shape = state_shape
@@ -54,6 +69,7 @@ class PolicyNetwork:
         return self.model.predict(states, task, live=live)
 
     def train(self, trajectories):
+        # Creates a long list of all states and respective Q-values and fits the policy network
         for task in self.tasks:
             xs = []
             q_values = []
@@ -66,6 +82,7 @@ class PolicyNetwork:
             q_values = np.concatenate(q_values, axis=0)
             self.model.fit(xs, q_values, task)
 
+        # Related to the fixed parameter update
         self.steps += 1
         if self.steps > self.fixed_steps:
             self.steps = 0

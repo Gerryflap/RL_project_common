@@ -33,12 +33,27 @@ if __name__ == '__main__':
     actions = env.valid_actions()
     print(actions)
 
-    q_network = QNetwork((8,), actions, tasks, ks.layers.Dense(100, activation='relu'),
-                         ks.layers.Dense(4, activation='linear'), process_state, gamma=0.99, alpha=0.001, reward_scale=0.0001)
-    p_network = PolicyNetwork((8,), actions, tasks, ks.layers.Dense(100, activation='relu'),
-                         ks.layers.Dense(4, activation='softmax'), process_state, entropy_regularization=3.0, alpha=0.0000001)
+    def common_net(x):
+        x = ks.layers.Dense(100, activation='relu')(x)
+        return x
 
-    agent = SACU(env, q_network, p_network, tasks, num_learn=1)
+    def task_q_net(x):
+        x = ks.layers.Dense(100, activation='relu')(x)
+        x = ks.layers.Dense(4, activation='linear')(x)
+        return x
+
+    def task_p_net(x):
+        x = ks.layers.Dense(100, activation='relu')(x)
+        x = ks.layers.Dense(4, activation='softmax')(x)
+        return x
+
+
+    q_network = QNetwork((8,), actions, tasks, common_net,
+                         task_q_net, process_state, gamma=0.9, alpha=0.001, reward_scale=0.001)
+    p_network = PolicyNetwork((8,), actions, tasks, common_net,
+                         task_p_net, process_state, entropy_regularization=0.03, alpha=0.0001)
+
+    agent = SACU(env, q_network, p_network, tasks, num_learn=1, scheduler_period=500)
 
     # dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
     #                  lambd=0.9,

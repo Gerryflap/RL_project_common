@@ -23,6 +23,21 @@ class QNetwork(generic.QNetwork):
                  fixed_steps=1000,
                  reward_scale=1.0
                  ):
+        """
+        Initializes a Tasked Q Network. This Q network uses retrace for Q-value calculation
+        :param state_shape: The shape of the state variable WITHOUT the batch dimension
+        :param action_space: The Action space
+        :param tasks: A list of Tasks
+        :param shared_layers: The shared/common layers of the network as a function (using the keras functional API)
+        :param task_specific_layers: The task specific layers of the network as a function (using the keras functional API)
+        :param state_transformer: A function that takes a state object and transforms it to a network input
+        :param alpha: The learning rate
+        :param gamma: The discount factor
+        :param p_network: The Policy Network, this can be None at init as long as it's set later (This is done by the SACU agent)
+        :param fixed_steps: The number of training steps that the fixed network is kept fixed.
+            After these steps it's updated and the step counter is reset.
+        :param reward_scale: A float that is used to scale rewards
+        """
 
         self.reward_scale = reward_scale
         self.fixed_steps = fixed_steps
@@ -38,7 +53,6 @@ class QNetwork(generic.QNetwork):
             self.inverse_action_lookup[a] = i
         self.state_shape = state_shape
         self.gamma = gamma
-
 
         self.model = TaskedDualNeuralNet(
             state_shape,

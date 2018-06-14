@@ -40,7 +40,7 @@ class SACU:
         self.qmodel = qmodel
         self.amodel = amodel
 
-        # Set the references
+        # Set the references (this can't be done on init because both objects need each other)
         self.qmodel.p_network = amodel
         self.amodel.q_network = qmodel
 
@@ -63,6 +63,7 @@ class SACU:
                 if t % xi == 0:                         # Check if a new task should be scheduled
                     task = random.choice(self.tasks)    # If so, sample a new task from the scheduler
                     Tau.append(task)
+                    print("Switching to ", task)
                     h += 1                              # Update number of tasks scheduled
                 a, dist = pi_theta.\
                     sample_distribution(s, Tau[-1])     # Sample action according to latest task
