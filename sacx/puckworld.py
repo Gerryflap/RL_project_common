@@ -69,7 +69,8 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
     SE_TASK = Task('se corner')
     SW_TASK = Task('sw corner')
     GC_TASK = Task('go green')
-    AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK, GC_TASK]
+    #AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK, GC_TASK]
+    AUX_TASKS = [GC_TASK]
 
     # Reward obtained from epsilon-region around goal state
     DELTA_SG = 1
@@ -181,7 +182,10 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         x_c, y_c = s['good_creep_x'], s['good_creep_y']
         d = self._d(x, y, x_c, y_c)
         max_d = self._d(0, 0, self.width, self.height)
-        return (max_d - d) / max_d
+        r = (max_d - d) / max_d
+        if r <= 0.7:
+            return 0
+        return r
 
     def step(self, action: PuckWorldAction) -> tuple:
         """

@@ -19,7 +19,7 @@ if __name__ == '__main__':
     q_network = QNetwork((4,), actions, tasks, ks.layers.Dense(100, activation='relu'),
                          ks.layers.Dense(2, activation='linear'), lambda x: x.state, gamma=0.9, alpha=0.01)
     p_network = PolicyNetwork((4,), actions, tasks, ks.layers.Dense(100, activation='relu'),
-                         ks.layers.Dense(2, activation='softmax'), lambda x: x.state, entropy_regularization=0.3, alpha=0.001)
+                         ks.layers.Dense(2, activation='softmax'), lambda x: x.state, entropy_regularization=0.1, alpha=0.001)
 
     agent = SACU(env, q_network, p_network, tasks, num_learn=100)
 
