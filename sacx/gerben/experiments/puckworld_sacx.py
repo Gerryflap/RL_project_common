@@ -49,10 +49,10 @@ if __name__ == '__main__':
 
 
     q_network = QNetwork((8,), actions, tasks, common_net,
-                         task_q_net, process_state, gamma=0.9, alpha=0.01, reward_scale=1, fixed_steps=5)
+                         task_q_net, process_state, gamma=0.9, alpha=0.01, reward_scale=1, fixed_steps=10, lambd_min=1e-2, lambd=0.9)
     p_network = PolicyNetwork((8,), actions, tasks, common_net,
-                         task_p_net, process_state, entropy_regularization=0.03, alpha=0.001, fixed_steps=5)
+                         task_p_net, process_state, entropy_regularization=0.03, alpha=0.001, fixed_steps=10)
 
-    agent = SACU(env, q_network, p_network, tasks, num_learn=5, scheduler_period=500)
+    agent = SACU(env, q_network, p_network, tasks, num_learn=10, scheduler_period=500)
 
     agent.actor()

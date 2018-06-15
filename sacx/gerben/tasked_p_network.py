@@ -68,12 +68,13 @@ class PolicyNetwork:
         return self.model.predict(states, task, live=live)
 
     def train(self, trajectories):
-        # Creates a long list of all states and respective Q-values and fits the policy network
+        # Creates a list of all "initial" states and respective Q-values and fits the policy network
+        # TODO: It should actually iterate over all states in trajectory, but this is not implemented in the Q-network
         for task in self.tasks:
             xs = []
             q_values = []
             for trajectory in trajectories:
-                states = np.array([self.state_transformer(t[0]) for t in trajectory])
+                states = np.array([self.state_transformer(t[0]) for t in trajectory[:1]])
                 xs.append(states)
                 qs = self.q_network.Qp_array(states, task)
                 q_values.append(qs)

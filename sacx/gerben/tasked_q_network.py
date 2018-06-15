@@ -1,3 +1,4 @@
+import math
 import random
 
 import numpy as np
@@ -21,7 +22,9 @@ class QNetwork(generic.QNetwork):
                  gamma=0.9,
                  p_network: PolicyNetwork = None,
                  fixed_steps=1000,
-                 reward_scale=1.0
+                 reward_scale=1.0,
+                 lambd=0.9,
+                 lambd_min=0.0
                  ):
         """
         Initializes a Tasked Q Network. This Q network uses retrace for Q-value calculation
@@ -37,8 +40,18 @@ class QNetwork(generic.QNetwork):
         :param fixed_steps: The number of training steps that the fixed network is kept fixed.
             After these steps it's updated and the step counter is reset.
         :param reward_scale: A float that is used to scale rewards
+        :param lambd: The lambda value used by the retrace algorithm. Similar to its use in SARSA lambda.
+        :param lambd_min: A cap on the lambda value similar to the one used in our SARSA lambda implementation.
+            It cuts off trajectories when lambda^k goes below this value. Given that SAC-X often operates on
+            trajectories with a mean length of ~500 (where lambda^k could easily be 1e-20), using this value
+            yields massive speed improvements without large costs.
         """
-
+        self.lambd = lambd
+        self.lambda_min = lambd_min
+        self.max_trajectory_length = None
+        if self.lambda_min != 0:
+            self.max_trajectory_length = int(math.log(self.lambda_min, lambd))
+            print("Capping trajectories at a max length of ", self.max_trajectory_length)
         self.reward_scale = reward_scale
         self.fixed_steps = fixed_steps
         self.steps = 0
@@ -104,7 +117,10 @@ class QNetwork(generic.QNetwork):
 
         # Initialize the q_delta variable and get all Qsa values for the trajectory
         q_delta = 0
-        states = np.array([self.state_transformer(e[0]) for e in trajectory])
+        if self.max_trajectory_length is None:
+            states = np.array([self.state_transformer(e[0]) for e in trajectory])
+        else:
+            states = np.array([self.state_transformer(e[0]) for e in trajectory[:self.max_trajectory_length+1]])
 
         q_values = self.model.predict(states, task, live=True)
         q_fixed_values = self.model.predict(states, task, live=False)
@@ -120,7 +136,13 @@ class QNetwork(generic.QNetwork):
 
 
         # Pick all b(a_t | state, B) from the trajectory
-        all_b_action_probabilities = np.array(([experience[3][self.inverse_action_lookup[experience[1]]] for experience in trajectory]))
+        if self.max_trajectory_length is None:
+            all_b_action_probabilities = np.array(([experience[3][self.inverse_action_lookup[experience[1]]] for experience in trajectory]))
+        else:
+            all_b_action_probabilities = np.array(
+                (
+                    [experience[3][self.inverse_action_lookup[experience[1]]] for experience in trajectory[:self.max_trajectory_length+1]]
+                ))
 
         #print("Pi:", all_action_probabilities)
         #print("B:", all_b_action_probabilities)
@@ -136,11 +158,15 @@ class QNetwork(generic.QNetwork):
         # Keep the product of c_k values in a variable
         c_product = 1
 
+        iterations = len(trajectory)
+        if self.max_trajectory_length is not None:
+            iterations = min(iterations, self.max_trajectory_length)
+
         # Iterate over the trajectory to calculate the expected returns
-        for j, (s, a, r, _) in enumerate(trajectory):
+        for j, (s, a, r, _) in enumerate(trajectory[:iterations]):
             # Multiply the c_product with the next c-value,
             #   this makes any move done after a "dumb" move (according to our policy) less significant
-            c_product *= c[j]
+            c_product *= c[j] * self.lambd
 
             a_index = self.inverse_action_lookup[a]
 
