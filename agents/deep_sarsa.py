@@ -29,16 +29,18 @@ class DeepSarsa(Agent):
         self.replay_memory = deque(maxlen=replay_memory_size)
         self.minibatch_size = minibatch_size
 
-    def learn(self, num_episodes: int=1000000) -> EpsilonGreedyPolicy:
+    def learn(self, num_episodes: int=1000000, result_handler=None) -> EpsilonGreedyPolicy:
         Q, pi = self.qnetwork, self.policy
-        for _ in range(num_episodes):
+        for i in range(num_episodes):
             s = self.env.reset()
-
+            r_sum = 0
             trajectory = []
+            
             while not s.is_terminal():
                 a = pi.sample(s)
                 s_p, r = self.env.step(a)
                 trajectory += [(s, a, r)]
+                r_sum += r
 
                 # Train Q-network
                 if len(self.replay_memory) > 0:
@@ -51,6 +53,10 @@ class DeepSarsa(Agent):
                 s = s_p
 
             self.store_in_replay_memory(trajectory)
+
+            print("[%i/%i]: %f" % (i, num_episodes, r_sum))
+            if callable(result_handler):
+                result_handler(r_sum)
             pass
 
         return pi
