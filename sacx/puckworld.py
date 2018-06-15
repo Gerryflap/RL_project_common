@@ -183,10 +183,12 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         d = self._d(x, y, x_c, y_c)
         max_d = self._d(0, 0, self.width, self.height)
         r = (max_d - d) / max_d
-        if r >= 0.8:
-            return r**2
-        else:
-            return 0
+        dx, dy = (x_c - x)/self.width, (y_c - y)/self.height
+        vx, vy = s['player_velocity_x'] ,s['player_velocity_y']
+        vx, vy = vx/self.width, vy/self.height
+        dxp, dyp = (x_c - vx - x) / self.width, (y_c - vy - y) / self.height
+        r = (dx**2 + dy**2)**0.5 - (dxp**2 + dyp**2)**0.5
+        return r * 1000
 
     def step(self, action: PuckWorldAction) -> tuple:
         """
