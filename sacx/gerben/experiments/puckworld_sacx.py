@@ -9,13 +9,14 @@ if __name__ == '__main__':
     from sacx.gerben.tasked_p_network import PolicyNetwork
     from sacx.gerben.sacu import SACU
     from sacx.gerben.extcore import Task
+    from sacx.multi_task_logger import PlottingMultiTaskLogger
 
     width, height = size = 400, 400
     env = PuckWorld(1000, size)
 
     def process_state(s):
         state = s.state
-        out = np.zeros((9,))
+        out = np.zeros((10,))
         out[0] = state["player_x"]/width
         out[1] = state["player_y"]/height
         out[2] = state["player_velocity_x"]/width
@@ -25,6 +26,7 @@ if __name__ == '__main__':
         out[6] = state["bad_creep_x"]/width
         out[7] = state["bad_creep_y"]/height
         out[8] = ((out[0] - out[6])**2 + (out[1] - out[7])**2)**0.5
+        out[9] = ((out[0] - out[4]) ** 2 + (out[1] - out[5]) ** 2) ** 0.5
         return out
 
 
@@ -35,6 +37,8 @@ if __name__ == '__main__':
     print(actions)
 
     def common_net(x):
+        x = ks.layers.Dense(100, activation='relu')(x)
+        x = ks.layers.Dense(100, activation='relu')(x)
         x = ks.layers.Dense(100, activation='relu')(x)
         return x
 
@@ -48,12 +52,13 @@ if __name__ == '__main__':
         x = ks.layers.Dense(4, activation='softmax')(x)
         return x
 
+    listeners = [PlottingMultiTaskLogger(tasks, 500, ['red', 'green'])]
 
-    q_network = QNetwork((9,), actions, tasks, common_net,
-                         task_q_net, process_state, gamma=0.99, alpha=0.001, reward_scale=1, fixed_steps=10, lambd_min=1e-2, lambd=0.9)
-    p_network = PolicyNetwork((9,), actions, tasks, common_net,
-                         task_p_net, process_state, entropy_regularization=0.03, alpha=0.0001, fixed_steps=10)
+    q_network = QNetwork((10,), actions, tasks, common_net,
+                         task_q_net, process_state, gamma=0.95, alpha=0.00001, reward_scale=1, fixed_steps=50, lambd_min=1e-2, lambd=0.9)
+    p_network = PolicyNetwork((10,), actions, tasks, common_net,
+                         task_p_net, process_state, entropy_regularization=0.1, alpha=0.00001, fixed_steps=50)
 
-    agent = SACU(env, q_network, p_network, tasks, num_learn=10, scheduler_period=500)
+    agent = SACU(env, q_network, p_network, tasks, num_learn=50, scheduler_period=500, listeners=listeners)
 
     agent.actor()

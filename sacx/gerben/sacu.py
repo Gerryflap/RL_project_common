@@ -23,8 +23,10 @@ class SACU:
                  steps_per_episode: int=1000,  # TODO -- proper default value
                  scheduler_period: int=150,   # TODO -- proper default value
                  num_avg_gradient: int=10,  # TODO -- proper default value,
+                 listeners=None
                  ):
 
+        self.listeners = listeners if listeners is not None else []
         assert isinstance(env, TaskEnvironment) and \
                isinstance(env, FiniteActionEnvironment)
         self.tasks = tasks
@@ -79,6 +81,7 @@ class SACU:
                 score += np.array([rs[t] for t in self.tasks])
                 if s_p.is_terminal():
                     break
+            self._update_listeners(tau, Tau)
             print("Score: ", score)
             B.append(tau)                        # Add trajectory and scheduling choices to replay buffer
             self.learner()
@@ -98,4 +101,8 @@ class SACU:
             trajectory = trajectory[random.randint(0, len(trajectory) - 1):]
             minibatch.append(trajectory)
         return minibatch
+
+    def _update_listeners(self, trajectory, tasks):
+        for listener in self.listeners:
+            listener.log(trajectory, tasks)
 
