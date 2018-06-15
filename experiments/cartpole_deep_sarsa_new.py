@@ -9,31 +9,32 @@ if __name__ == '__main__':
     from experiment_util import Logger
     l = Logger()
 
-    
-    neural_network = ks.models.Sequential()
-    neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
-    neural_network.add(ks.layers.Dense(50, activation='relu'))
-    neural_network.add(ks.layers.Dense(2, activation='linear'))
+    lambd = [0.9, 0.8, 0.7, 0.6, 0.5]
+    for i in range(5):
+        neural_network = ks.models.Sequential()
+        neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
+        neural_network.add(ks.layers.Dense(50, activation='relu'))
+        neural_network.add(ks.layers.Dense(2, activation='linear'))
+        
+        neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001),
+                               loss='mse')
+        
+        env = CartPole(render=True)
+        actions = env.valid_actions()
+        
+        dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
+                         lambd=lambd[i],
+                         gamma=0.9,
+                         reward_factor=0.01,
+                         fixed_length=100
+        )
+        
+        dql = DeepSarsa(env, dqn,
+                        epsilon=0.3,
+                        epsilon_step_factor=0.99995,
+                        epsilon_min=0.05,
+                        replay_memory_size=1000
+        )
 
-    neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001),
-               loss='mse')
-
-    env = CartPole(render=True)
-    actions = env.valid_actions()
-
-    dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
-                     lambd=0.9,
-                     gamma=0.9,
-                     reward_factor=0.01,
-                     fixed_length=100
-                     )
-
-    dql = DeepSarsa(env, dqn,
-                    epsilon=0.3,
-                    epsilon_step_factor=0.99995,
-                    epsilon_min=0.05,
-                    replay_memory_size=1000
-                    )
-
-    experiment = l.start_experiment( dql.get_configuration() )
-    q = dql.learn( num_episodes=10, result_handler=experiment.log)
+        experiment = l.start_experiment( dql.get_configuration() )
+        q = dql.learn( num_episodes=5, result_handler=experiment.log)
