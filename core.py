@@ -1,5 +1,5 @@
 import random
-
+from experiment_util import Configurable
 """
     Core classes of a Reinforcement Learning experiment
     
@@ -33,7 +33,7 @@ class State:
         return self.terminal
 
 
-class Environment:
+class Environment(Configurable):
     """
         Class for describing the environments and how they handle states/actions/rewards/observations for the algorithms
         to learn from

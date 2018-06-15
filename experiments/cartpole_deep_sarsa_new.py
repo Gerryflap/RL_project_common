@@ -6,6 +6,10 @@ if __name__ == '__main__':
     from environments.cartpole import CartPole
     from q_network_sarsa_lambda import QNetworkSL
 
+    from experiment_util import Logger
+    l = Logger()
+
+    
     neural_network = ks.models.Sequential()
     neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
     neural_network.add(ks.layers.Dense(50, activation='relu'))
@@ -31,4 +35,5 @@ if __name__ == '__main__':
                     replay_memory_size=1000
                     )
 
-    q = dql.learn()
+    experiment = l.start_experiment( dql.get_configuration() )
+    q = dql.learn( num_episodes=10, result_handler=experiment.log)
