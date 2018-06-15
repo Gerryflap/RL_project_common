@@ -35,7 +35,8 @@ if __name__ == '__main__':
                      lambd=0.9,
                      gamma=0.9,
                      reward_factor=0.1,
-                     fixed_length=100
+                     fixed_length=100,
+                     lambda_min=1e-4
                      )
 
     dql = DeepSarsa(env, dqn,

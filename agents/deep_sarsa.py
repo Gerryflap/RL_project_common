@@ -16,7 +16,7 @@ class DeepSarsa(Agent):
                  minibatch_size: int=32,
                  epsilon=0.05,
                  epsilon_step_factor=1.0,
-                 epsilon_min = 0.0
+                 epsilon_min=0.0
                  ):
         super().__init__(env)
         self.epsilon_step_factor = epsilon_step_factor

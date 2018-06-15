@@ -1,3 +1,5 @@
+import math
+
 import numpy as np
 import keras as ks
 
@@ -18,7 +20,8 @@ class QNetworkSL(QEstimator):
             lambd: float=0.0,
             fixed_length=100,
             reward_factor=1.0,
-            fix_lambda_skew=True
+            fix_lambda_skew=True,
+            lambda_min=0.0
     ):
         """
         Create a new Deep SARSA(λ)-Network
@@ -34,7 +37,16 @@ class QNetworkSL(QEstimator):
             k to infinity. In a practical situation, trajectories are not infinite an thus this scaling needs to be
             different. When this parameter is set to true, the total return will be divided by the sum of
             lambdas (λ^0 + λ^1 ... λ^n) instead. This will make the sum of lambda weights 1 again.
+        :param lambda_min: Lambda_min defines a minimum lambda value after which calculations are considered irrelevant
+            When calculating the new Q-values, the TD(λ) returns will be calculated up until the point where λ^k < λ_min.
+            This massively speeds up computations in cases where the trajectories become long (eg. >100) but loses
+            a bit of precision.
         """
+        self.lambda_min = lambda_min
+        self.max_trajectory_length = None
+        if self.lambda_min != 0:
+            self.max_trajectory_length = int(math.log(self.lambda_min, lambd))
+            print("Capping trajectories at a max length of ", self.max_trajectory_length)
         self.fix_lambda_skew = fix_lambda_skew
         assert (None, len(out_map)) == model.output_shape  # Make sure all outputs can be mapped to actions
         self.live_model = model
@@ -90,8 +102,12 @@ class QNetworkSL(QEstimator):
         # Calculate the target q values for each of the trajectories in the minibatch:
         for i, trajectory in enumerate(trajectories):
 
-            # Get all states in the trajectory:
-            states = np.array([self.phi(t[0])[0] for t in trajectory])
+            # Get all states in the trajectory (or up to a certain point when using lambda_min):
+            if self.max_trajectory_length is None:
+                states = np.array([self.phi(t[0])[0] for t in trajectory])
+            else:
+                states = np.array([self.phi(t[0])[0] for t in trajectory[:self.max_trajectory_length+1]])
+
             if len(states) > 1:
                 # Shorten the states such that the current state is not in there
                 fixed_qs = self.live_model.predict(states[1:])
@@ -102,7 +118,12 @@ class QNetworkSL(QEstimator):
             lambda_sum = 0
 
             # Calculate all TD(n) returns and add them to the total to get TD(lambda)
-            for j in range(len(trajectory)):
+
+            iterations = len(trajectory)
+            if self.max_trajectory_length is not None:
+                iterations = min(iterations, self.max_trajectory_length)
+
+            for j in range(iterations):
                 s, a, r = trajectory[j]
 
                 r *= self.reward_factor
@@ -124,7 +145,6 @@ class QNetworkSL(QEstimator):
                 q_return += self.lambd ** j * n_return
                 lambda_sum += self.lambd ** j
 
-            # TODO: Find out why this is valid (comes from the slides). It shouldn't work for lambda = 1
             if not self.fix_lambda_skew:
                 q_return *= (1 - self.lambd)
             else:
