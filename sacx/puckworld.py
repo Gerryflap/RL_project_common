@@ -188,7 +188,7 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         vx, vy = vx/self.width, vy/self.height
         dxp, dyp = (x_c - vx - x) / self.width, (y_c - vy - y) / self.height
         r = (dx**2 + dy**2)**0.5 - (dxp**2 + dyp**2)**0.5
-        return r * 1000
+        return r * 200
 
     def step(self, action: PuckWorldAction) -> tuple:
         """

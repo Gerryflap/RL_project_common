@@ -72,14 +72,15 @@ class PolicyNetwork:
         # TODO: It should actually iterate over all states in trajectory, but this is not implemented in the Q-network
         for task in self.tasks:
             xs = []
-            q_values = []
+            #q_values = []
             for trajectory in trajectories:
                 states = np.array([self.state_transformer(t[0]) for t in trajectory[:1]])
                 xs.append(states)
-                qs = self.q_network.Qp_array(states, task)
-                q_values.append(qs)
+                #qs = self.q_network.Qp_array(states, task)
+                #q_values.append(qs)
             xs = np.concatenate(xs, axis=0)
-            q_values = np.concatenate(q_values, axis=0)
+
+            q_values = self.q_network.Qp_array(xs, task)
             self.model.fit(xs, q_values, task)
 
         # Related to the fixed parameter update
