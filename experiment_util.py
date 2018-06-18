@@ -5,6 +5,7 @@ import collections
 import datetime
 import tensorflow as tf
 import h5py
+import json
 
 class Logger():
     def __init__(self, session=None, configuration=None, filename="results.h5"):
@@ -14,13 +15,13 @@ class Logger():
         #grp = f.create_group('%s' % session)
 
     def __setup_experiment__(self):
+        if self.configuration is None:
+            raise ValueError("A configuration was never initialized.")
         with h5py.File(self.h5_filename, mode="a") as f:
-            if self.configuration is None:
-                raise ValueError("A configuration was never initialized.")
             self.dataset_name = "results_%s" % (datetime.datetime.now ())
             print("Writing experiment results to %s/%s" % (self.session, self.dataset_name))
             dataset = f.create_dataset("%s/%s" % (self.session, self.dataset_name), (0,), dtype="f", compression="gzip", maxshape=(None,))
-            dataset.attrs['configuration'] = str(self.configuration)
+            dataset.attrs['configuration'] = json.dumps(self.configuration, default=(lambda x: None))
         
 
     def start_experiment(self, configuration = None):
@@ -29,11 +30,20 @@ class Logger():
         return logger
 
     def log(self, res):
+        if self.configuration is None:
+            raise ValueError("A configuration was never initialized.")
         with h5py.File(self.h5_filename, mode="a") as f:
             dataset = f["%s/%s" % (self.session, self.dataset_name)]
             dataset.resize(dataset.shape[0]+1, axis=0)
             dataset[dataset.shape[0]-1] = res
 
+            
+    def save_attribute(self, attr_name, data):
+        if self.configuration is None:
+            raise ValueError("A configuration was never initialized.")
+        with h5py.File(self.h5_filename, mode="a") as f:
+            dataset = f["%s/%s" % (self.session, self.dataset_name)]
+            dataset.attrs[attr_name] = json.dumps(data, default=(lambda x: None))
 
 def configurable(init):
     '''
@@ -116,10 +126,17 @@ class Configurable(metaclass=ABCMeta):
         def solve(k,v):
             if k is "self":
                 return (k, v.__class__.__name__) # refer to object as its classname
-            if k is not "self" and isinstance(v, Configurable):
+            elif k is not "self" and isinstance(v, Configurable):
                 return (k, v.get_configuration())
-            if k is not "self" and isinstance(v, tf.keras.models.Model):
+            elif k is not "self" and isinstance(v, tf.keras.models.Model):
                 return (k, v.to_json())
+            #elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple) or \
+            #     isinstance(v, str) or isinstance(v, int) or isinstance(v, float) or \
+            #     isinstance(v, bool) or v is None:
+            #    return (k, v) # serializable
+            #else:
+            #    print("%s is not serializable" % k)
+            #    return (k, "not serializable") 
             return (k,v)
         
         if c is None: #base case

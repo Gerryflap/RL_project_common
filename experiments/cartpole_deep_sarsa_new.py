@@ -36,5 +36,8 @@ if __name__ == '__main__':
                         replay_memory_size=1000
         )
 
-        experiment = l.start_experiment( dql.get_configuration() )
+        c = dql.get_configuration()
+        print(c)
+        experiment = l.start_experiment( c )
         q = dql.learn( num_episodes=5, result_handler=experiment.log)
+        experiment.save_attribute("weights", neural_network.get_weights())
