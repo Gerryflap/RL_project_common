@@ -11,10 +11,9 @@ if __name__ == '__main__':
     neural_network.add(ks.layers.Dense(50, activation='relu'))
     neural_network.add(ks.layers.Dense(3, activation='linear'))
 
-    neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001),
-               loss='mse')
+    neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001), loss='mse')
 
-    env = SnakeDiscrete(render=True, render_freq=20)
+    env = SnakeDiscrete(render=True, render_freq=100)
     actions = env.valid_actions()
 
     dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 9)),
