@@ -51,14 +51,17 @@ class SnakeVisual(FiniteActionEnvironment):
     LEFT = SnakeAction(3)
     ACTIONS = [RIGHT, DOWN, LEFT]
 
-    def __init__(self, render=True):
+    def __init__(self, render=True, render_freq=1):
         """
         Create a new Snake Environment
         :param render: A boolean indicating whether the environment should be rendered
         """
         super().__init__()
         self.env = gym.make('snake-rotate-visual-v0')
-        self.render = render
+        self.render = False
+        self.allow_rendering = render  # Flag to determine whether rendering may ever occur
+        self.render_freq = render_freq  # How frequently should rendering occur
+        self.itters = 0
         self.terminal = False
         self.reset()
 
@@ -84,15 +87,35 @@ class SnakeVisual(FiniteActionEnvironment):
         if self.render:
             self.env.render()
         state, reward, self.terminal, info = self.env.step(action.direction)
+        state = self._process_state(state)
         return SnakeState(state, self.terminal), reward
+
+    @staticmethod
+    def _process_state(state):
+        state = np.reshape(state, (15,-1))
+        return state
+
+    def _toggle_rendering(self):
+        """
+        Updates itter counter and toggles the renderer appropriately
+        """
+        if not self.allow_rendering:
+            return
+        if self.itters % self.render_freq == 0:
+            self.render = True
+        elif self.itters % self.render_freq == 1:
+            self.render = False
+        self.itters += 1
 
     def reset(self):
         """
-        Reset the environment state
+        Reset the environment state & potentially toggle rendering
         :return: A state containing the initial state
         """
+        self._toggle_rendering()
         self.terminal = False
-        return SnakeState(self.env.reset(), self.terminal)
+        state = self._process_state(self.env.reset())
+        return SnakeState(state, self.terminal)
 
 
 class SnakeDiscrete(FiniteActionEnvironment):
@@ -106,14 +129,18 @@ class SnakeDiscrete(FiniteActionEnvironment):
     LEFT = SnakeAction(3)
     ACTIONS = [RIGHT, DOWN, LEFT]
 
-    def __init__(self, render=True):
+    def __init__(self, render=True, render_freq=1):
         """
         Create a new Snake Environment
         :param render: A boolean indicating whether the environment should be rendered
+        :param render_freq: How frequently the environment should be rendered
         """
         super().__init__()
         self.env = gym.make('snake-rotate-v0')
-        self.render = render
+        self.render = False
+        self.allow_rendering = render  # Flag to determine whether rendering may ever occur
+        self.render_freq = render_freq  # How frequently should rendering occur
+        self.itters = 0
         self.terminal = False
         self.reset()
 
@@ -136,7 +163,6 @@ class SnakeDiscrete(FiniteActionEnvironment):
         food_d, food_a, dists = s
         food_d = SnakeDiscrete.disc_dist(food_d)
         food_a = SnakeDiscrete.disc_angle(food_a)
-        # food = np.dstack((food_d, food_a))
         dists = list(map(lambda d: SnakeDiscrete.disc_dist(d), dists))
         return np.concatenate(([food_d], [food_a], dists))
 
@@ -167,22 +193,36 @@ class SnakeDiscrete(FiniteActionEnvironment):
             state = SnakeDiscrete.disc_state(state)
         return SnakeState(state, self.terminal), reward
 
+    def _toggle_rendering(self):
+        """
+        Updates itter counter and toggles the renderer appropriately
+        """
+        if not self.allow_rendering:
+            return
+        if self.itters % self.render_freq == 0:
+            self.render = True
+        elif self.itters % self.render_freq == 1:
+            self.render = False
+        self.itters += 1
+
     def reset(self):
         """
-        Reset the environment state
+        Reset the environment state and update the render counter
         :return: A state containing the initial state
         """
+        self._toggle_rendering()
+
         self.terminal = False
         s = self.env.reset()
-        return SnakeState(SnakeDiscrete.disc_state(s), self.terminal), 0
+        return SnakeState(SnakeDiscrete.disc_state(s), self.terminal)
 
 
 if __name__ == '__main__':
 
     _e = SnakeDiscrete(render=True)
-    _s, _r = _e.reset()
+    _s = _e.reset()
 
     for _ in range(1000):
         while not _s.is_terminal():
             _s, _r = _e.step(_e.sample())
-        _s, _r = _e.reset()
+        _s = _e.reset()
