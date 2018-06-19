@@ -36,7 +36,7 @@ if __name__ == '__main__':
     listeners = [PlottingMultiTaskLogger(tasks, 200, ['red', 'blue', 'blue', 'green'])]
     q_network = QNetwork((2,), actions, tasks, common_net,
                          task_q_net, lambda s: s.state,
-                         gamma=1.0, alpha=0.0001, reward_scale=0.03, fixed_steps=100, lambd=0.95, lambd_min=1e-2
+                         gamma=1.0, alpha=0.001, reward_scale=0.03, fixed_steps=100, lambd=0.95, lambd_min=1e-2
                          )
     p_network = PolicyNetwork((2,), actions, tasks, common_net,
                          task_p_net, lambda s: s.state, entropy_regularization=-0.005, alpha=0.0001, fixed_steps=100)

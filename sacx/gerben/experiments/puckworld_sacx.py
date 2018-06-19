@@ -50,12 +50,12 @@ if __name__ == '__main__':
         x = ks.layers.Dense(4, activation='softmax')(x)
         return x
 
-    listeners = [PlottingMultiTaskLogger(tasks, 500, ['red', 'green'])]
+    listeners = [PlottingMultiTaskLogger(tasks, 500, ['red', 'blue','blue','blue','blue', 'green'])]
 
     q_network = QNetwork((10,), actions, tasks, common_net,
-                         task_q_net, process_state, gamma=0.9, alpha=0.000001, reward_scale=10, fixed_steps=100, lambd_min=1e-2, lambd=0.8)
+                         task_q_net, process_state, gamma=1.0, alpha=0.001, reward_scale=1, fixed_steps=100, lambd_min=1e-2, lambd=0.8)
     p_network = PolicyNetwork((10,), actions, tasks, common_net,
-                         task_p_net, process_state, entropy_regularization=-0.05, alpha=0.000001, fixed_steps=100)
+                         task_p_net, process_state, entropy_regularization=-0.05, alpha=0.0001, fixed_steps=100)
 
     agent = SACU(env, q_network, p_network, tasks, num_learn=100, scheduler_period=500, listeners=listeners)
 

@@ -69,8 +69,8 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
     SE_TASK = Task('se corner')
     SW_TASK = Task('sw corner')
     GC_TASK = Task('go green')
-    #AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK, GC_TASK]
-    AUX_TASKS = [GC_TASK]
+    AUX_TASKS = [NE_TASK, NW_TASK, SE_TASK, SW_TASK, GC_TASK]
+    #AUX_TASKS = [GC_TASK]
 
     # Reward obtained from epsilon-region around goal state
     DELTA_SG = 1
@@ -183,12 +183,13 @@ class PuckWorld(TaskEnvironment, FiniteActionEnvironment):
         d = self._d(x, y, x_c, y_c)
         max_d = self._d(0, 0, self.width, self.height)
         r = (max_d - d) / max_d
-        dx, dy = (x_c - x)/self.width, (y_c - y)/self.height
-        vx, vy = s['player_velocity_x'] ,s['player_velocity_y']
-        vx, vy = vx/self.width, vy/self.height
-        dxp, dyp = (x_c - vx - x) / self.width, (y_c - vy - y) / self.height
-        r = (dx**2 + dy**2)**0.5 - (dxp**2 + dyp**2)**0.5
-        return r * 200
+        # dx, dy = (x_c - x)/self.width, (y_c - y)/self.height
+        # vx, vy = s['player_velocity_x'] ,s['player_velocity_y']
+        # vx, vy = vx/self.width, vy/self.height
+        # dxp, dyp = (x_c - vx - x) / self.width, (y_c - vy - y) / self.height
+        # r = (dx**2 + dy**2)**0.5 - (dxp**2 + dyp**2)**0.5
+        # return r * 200
+        return r
 
     def step(self, action: PuckWorldAction) -> tuple:
         """

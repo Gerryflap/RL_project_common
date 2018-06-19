@@ -144,16 +144,13 @@ class QNetwork(generic.QNetwork):
                     [experience[3][self.inverse_action_lookup[experience[1]]] for experience in trajectory[:self.max_trajectory_length+1]]
                 ))
 
-        #print("Pi:", all_action_probabilities)
-        #print("B:", all_b_action_probabilities)
-
         # Calculate the value of c_k for the whole trajectory
         c = all_action_probabilities / all_b_action_probabilities
 
-
-        #print(c)
         # Make sure that c is capped on 1, so c_k = min(1, c_k)
         c[c > 1] = 1
+
+        c[0] = 1    # According to the retrace paper
 
         # Keep the product of c_k values in a variable
         c_product = 1
@@ -182,6 +179,9 @@ class QNetwork(generic.QNetwork):
             else:
                 # If this is the last entry, we'll assume the Q(s_j+1, *) to be fixed on 0 as the state is terminal
                 delta = self.reward_scale*r[task] - q_values[j, a_index]
+
+                # if task == self.tasks[0]:
+                #     print("Calculated last delta for main task, old_Q and delta:", q_values[j, a_index], q_delta + c_product * self.gamma ** j * delta)
 
             # Add this to the sum of q_deltas, where the term is multiplied by gamma and delta
             q_delta += c_product * self.gamma ** j * delta
