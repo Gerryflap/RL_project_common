@@ -13,12 +13,18 @@ class SarsaLambda(Agent):
         Sarsa-lambda Agent implementation
     """
 
-    def __init__(self, env: FiniteActionEnvironment, lam: float = 0.2, gamma: float = 1.0):
+    def __init__(self,
+                 env: FiniteActionEnvironment,
+                 lam: float = 0.2,
+                 gamma: float = 1.0,
+                 fex: callable=lambda x: x
+                 ):
         """
         Create a new SarsaLambda Agent
         :param env: The environment the agent will learn from
         :param lam: The lambda parameter
         :param gamma: Reward discount factor
+        :param fex: Optional feature extraction from observation states
         """
         super().__init__(env)
         assert 0 <= lam <= 1
@@ -31,6 +37,7 @@ class SarsaLambda(Agent):
                                                  epsilon=self.epsilon)
         self.lam = lam
         self.gamma = gamma
+        self.fex = fex
 
     def learn(self, num_iter=100000) -> EpsilonGreedyPolicy:
         """
@@ -41,14 +48,14 @@ class SarsaLambda(Agent):
         N, Q, E, pi = self.visit_count, self.q_table, self.eligibility_trace, self.policy
         for _ in range(num_iter):
             E.clear()
-            s = self.env.reset()
+            s = self.env_reset()
             a = self.env.sample()
 
             N[s] += 1
             N[s, a] += 1
 
             while not s.is_terminal():
-                s_p, r = self.env.step(a)
+                s_p, r = self.env_step(a)
                 N[s_p] += 1
 
                 a_p = pi.sample(s)
@@ -67,6 +74,13 @@ class SarsaLambda(Agent):
     def epsilon(self, s):
         N_0, N = 100, self.visit_count
         return N_0 / (N_0 + N[s])
+
+    def env_reset(self):
+        return self.fex(self.env.reset())
+
+    def env_step(self, a):
+        s, r = self.env.step(a)
+        return self.fex(s), r
 
 
 class MonteCarlo(SarsaLambda):
