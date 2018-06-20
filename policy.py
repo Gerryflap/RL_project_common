@@ -155,6 +155,3 @@ if __name__ == '__main__':
     _prob = _p(1, None)
 
     print(_p, _dist, _a, _prob)
-
-
-

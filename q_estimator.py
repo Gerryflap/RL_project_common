@@ -1,6 +1,7 @@
 from policy import Policy
 from experiment_util import Configurable
 
+
 class QEstimator(Configurable):
     """
         Describes an object that is used to predict Q-values for performing an action given the observation

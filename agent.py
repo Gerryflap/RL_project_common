@@ -2,6 +2,7 @@ from core import Environment
 from policy import Policy
 from experiment_util import Configurable
 
+
 class Agent(Configurable):
     """
         Agent class that learns a policy in a certain environment

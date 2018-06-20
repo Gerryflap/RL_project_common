@@ -2,9 +2,9 @@ if __name__ == '__main__':
     import keras as ks
     import numpy as np
 
-    from version4.agents.deep_q import DeepQLearning
-    from version4.environments.pixelcopter import VisualPixelCopter
-    from version4.q_network import QNetwork
+    from agents.deep_q import DeepQLearning
+    from environments.pixelcopter import VisualPixelCopter
+    from q_network import QNetwork
 
     width, height = size = (32, 32)
     env = VisualPixelCopter(size)
