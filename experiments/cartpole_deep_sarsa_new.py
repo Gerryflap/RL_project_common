@@ -9,8 +9,8 @@ if __name__ == '__main__':
     from experiment_util import Logger
     l = Logger()
 
-    lambd = [0.9, 0.8, 0.7, 0.6, 0.5]
-    for i in range(5):
+    lambd = [1.0, 0.9, 0.8, 0.6, 0.4, 0.2, 0.0]
+    for i in range(len(lambd)):
         neural_network = ks.models.Sequential()
         neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
         neural_network.add(ks.layers.Dense(50, activation='relu'))
@@ -39,5 +39,5 @@ if __name__ == '__main__':
         c = dql.get_configuration()
         print(c)
         experiment = l.start_experiment( c )
-        q = dql.learn( num_episodes=5, result_handler=experiment.log)
+        q = dql.learn( num_episodes=200, result_handler=experiment.log)
         experiment.save_attribute("weights", neural_network.get_weights())
