@@ -89,6 +89,12 @@ class QNetworkSL(QEstimator):
         else:
             return {a: v for a, v in pi.items() if a in actions}
 
+    def Q_array(self, states):
+        return self.live_model.predict(states)
+
+    def Qp_array(self, states):
+        return self.fixed_model.predict(states)
+
     def fit_on_trajectories(self, trajectories):
         """
         Train the network on a minibatch of trajectories
