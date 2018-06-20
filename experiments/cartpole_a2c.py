@@ -14,26 +14,28 @@ if __name__ == '__main__':
     lambd = [0.9, 0.8, 0.6, 0.4, 0.2, 0.0]
     for i in range(len(lambd)):
         value_network = ks.models.Sequential()
-        value_network.add(ks.layers.Dense(100, activation='relu', input_shape=(4,)))
-        value_network.add(ks.layers.Dense(100, activation='relu'))
+        value_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
+        value_network.add(ks.layers.Dense(50, activation='relu', input_shape=(4,)))
+
         value_network.add(ks.layers.Dense(2, activation='linear'))
 
-        value_network.compile(optimizer=ks.optimizers.Adam(lr=0.01),
+        value_network.compile(optimizer=ks.optimizers.Adam(lr=0.001),
                               loss='mse')
 
         policy_network = ks.models.Sequential()
-        policy_network.add(ks.layers.Dense(100, activation='relu', input_shape=(4,)))
-        policy_network.add(ks.layers.Dense(100, activation='relu'))
+        policy_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
+        policy_network.add(ks.layers.Dense(50, activation='relu', input_shape=(4,)))
         policy_network.add(ks.layers.Dense(2, activation='softmax'))
 
-        env = CartPole(render=True)
+        env = CartPole(render=False)
         actions = env.valid_actions()
 
         dn = QNetworkSL(value_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
                         lambd=lambd[i],
-                        gamma=0.9,
+                        gamma=1.0,
                         reward_factor=0.01,
-                        fixed_length=100
+                        fixed_length=100,
+                        lambda_min=1e-2
                         )
 
         pn = PNetwork(
@@ -42,7 +44,7 @@ if __name__ == '__main__':
             lambda x: np.array(x.state),
             fixed_steps=100,
             entropy_regularization=0.1,
-            alpha=0.01
+            alpha=0.001
         )
 
         a2c = ActorCriticAgent(env, dn, pn,
@@ -52,5 +54,5 @@ if __name__ == '__main__':
         c = a2c.get_configuration()
         print(c)
         experiment = l.start_experiment(c)
-        q = a2c.learn(num_episodes=200, result_handler=experiment.log)
+        q = a2c.learn(num_episodes=1000, result_handler=experiment.log)
         experiment.save_attribute("weights", value_network.get_weights())
