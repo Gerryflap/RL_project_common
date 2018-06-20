@@ -46,14 +46,14 @@ class SarsaLambda(Agent):
         N, Q, E, pi = self.visit_count, self.q_table, self.eligibility_trace, self.policy
         for _ in range(num_iter):
             E.clear()
-            s = self.env_reset()
+            s, terminal = self.env_reset()
             a = self.env.sample()
             sum_reward = 0
             N[s] += 1
             N[s, a] += 1
 
-            while not s.is_terminal():
-                s_p, r = self.env_step(a)
+            while not terminal:
+                s_p, r, terminal = self.env_step(a)
                 N[s_p] += 1
                 sum_reward += r
                 a_p = pi.sample(s)
@@ -76,11 +76,12 @@ class SarsaLambda(Agent):
         return N_0 / (N_0 + N[s])
 
     def env_reset(self):
-        return self.fex(self.env.reset())
+        s = self.env.reset()
+        return self.fex(s), s.is_terminal()
 
     def env_step(self, a):
         s, r = self.env.step(a)
-        return self.fex(s), r
+        return self.fex(s), r, s.is_terminal()
 
 
 class MonteCarlo(SarsaLambda):
