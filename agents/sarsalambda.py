@@ -37,7 +37,7 @@ class SarsaLambda(Agent):
         self.gamma = gamma
         self.fex = fex
 
-    def learn(self, num_iter=100000) -> EpsilonGreedyPolicy:
+    def learn(self, num_iter=100000, result_handler=None) -> EpsilonGreedyPolicy:
         """
         Learn a policy from the environment
         :param num_iter: The number of iterations the algorithm should run
@@ -48,14 +48,14 @@ class SarsaLambda(Agent):
             E.clear()
             s = self.env_reset()
             a = self.env.sample()
-
+            sum_reward = 0
             N[s] += 1
             N[s, a] += 1
 
             while not s.is_terminal():
                 s_p, r = self.env_step(a)
                 N[s_p] += 1
-
+                sum_reward += r
                 a_p = pi.sample(s)
 
                 E[s, a] += 1
@@ -67,6 +67,8 @@ class SarsaLambda(Agent):
                     E[k] *= self.gamma * self.lam
 
                 s, a = s_p, a_p
+            if result_handler is not None:
+                result_handler(sum_reward)
         return pi
 
     def epsilon(self, s):

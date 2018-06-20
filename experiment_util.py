@@ -4,6 +4,8 @@ import collections
 
 import datetime
 import tensorflow as tf
+import keras as ks
+
 import h5py
 import json
 
@@ -128,7 +130,7 @@ class Configurable(metaclass=ABCMeta):
                 return (k, v.__class__.__name__) # refer to object as its classname
             elif k is not "self" and isinstance(v, Configurable):
                 return (k, v.get_configuration())
-            elif k is not "self" and isinstance(v, tf.keras.models.Model):
+            elif k is not "self" and isinstance(v, ks.Model):
                 return (k, v.to_json())
             #elif isinstance(v, dict) or isinstance(v, list) or isinstance(v, tuple) or \
             #     isinstance(v, str) or isinstance(v, int) or isinstance(v, float) or \
