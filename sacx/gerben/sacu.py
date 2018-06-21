@@ -103,15 +103,27 @@ class SACU(object):
             self.amodel.train(trajectories)
 
     def learn(self, num_episodes=10000):
+        """
+        Trains the SAC-U Agent on the provided environment
+        :param num_episodes: The number of episodes of training to be done
+        """
         for i in range(num_episodes):
             self.actor()
             self.learner()
 
-
     def schedule_task(self, Tau):
+        """
+        Samples a new task from the scheduler
+        :param Tau: All previous tasks
+        :return: A new task
+        """
         return random.choice(self.tasks)
 
     def sample_trajectories(self):
+        """
+        Samples trajectories from the replay memory
+        :return: A minibatch (list) of random-length trajectories
+        """
         minibatch = []
         for i in range(self.num_avg_gradient):
             trajectory = self.replay_buffer[random.randint(0, len(self.replay_buffer) - 1)]
@@ -120,10 +132,20 @@ class SACU(object):
         return minibatch
 
     def _update_listeners(self, trajectory, tasks):
+        """
+        Updates all listeners registered to this Agent
+        :param trajectory: The trajectory to be pushed to the listeners
+        :param tasks: The tasks executed by the actor
+        """
         for listener in self.listeners:
             listener.log(trajectory, tasks)
 
     def train_scheduler(self, tau, Tau):
+        """
+        Trains the scheduler on the passed experience
+        :param tau: The trajectory
+        :param Tau: The chosen actions during the generation of the trajectory
+        """
         # SAC-U doesn't have a trained scheduler
         pass
 
