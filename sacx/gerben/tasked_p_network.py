@@ -10,7 +10,7 @@ import tensorflow as tf
 def make_policy_loss(entropy_regularization):
     def policy_loss(q_values, y_pred):
         policy = y_pred
-        loss = -tf.reduce_mean(tf.reduce_sum(policy * (q_values + entropy_regularization * tf.log(policy)), axis=1))
+        loss = -tf.reduce_mean(tf.reduce_sum(policy * (q_values - entropy_regularization * tf.log(policy)), axis=1))
         return loss
     return policy_loss
 

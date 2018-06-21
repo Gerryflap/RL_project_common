@@ -1,6 +1,9 @@
-import copy
+"""
+    Implementation of the SAC-U Agent
+"""
+
+
 import random
-import keras as ks
 from collections import deque
 
 import numpy as np
@@ -11,8 +14,7 @@ from sacx.gerben.tasked_p_network import PolicyNetwork
 from sacx.gerben.tasked_q_network import QNetwork
 
 
-class SACU:
-
+class SACU(object):
     def __init__(self,
                  env,
                  qmodel: QNetwork,
@@ -48,8 +50,10 @@ class SACU:
         self.qmodel.p_network = amodel
         self.amodel.q_network = qmodel
 
-
     def actor(self):
+        """
+        Takes 1 actor step
+        """
 
         xi = self.scheduler_period                      # Number of steps between task re-scheduling
         T = self.steps_per_episode                      # Total number of steps in an episode
@@ -57,42 +61,49 @@ class SACU:
 
         pi_theta = self.amodel
 
-        while True:            # Collect new trajectory from the environment
-            s = self.env.reset()                        # Obtain the initial environment state
+        # Collect new trajectory from the environment
+        s = self.env.reset()                        # Obtain the initial environment state
 
-            for task in self.tasks:
-                print(task, self.amodel.distribution(s, task), self.qmodel.Qs(s, task))
+        for task in self.tasks:
+            print(task, self.amodel.distribution(s, task), self.qmodel.Qs(s, task))
 
-            tau = []                                    # Store trajectory as list of (state, action)-tuples
-            Tau = []                                    # Store tasks that have been scheduled
-            h = 0                                       # Keep track of how many tasks have been scheduled so far
-            score = 0
-            for t in range(T):                          # Repeat for T time steps
-                if t % xi == 0:                         # Check if a new task should be scheduled
-                    task = random.choice(self.tasks)    # If so, sample a new task from the scheduler
-                    Tau.append(task)
-                    print("Switching to ", task)
-                    h += 1                              # Update number of tasks scheduled
-                a, dist = pi_theta.\
-                    sample_distribution(s, Tau[-1])     # Sample action according to latest task
-                s_p, rs = self.env.step(a)              # Execute action, obtain observation and rewards
-                tau.append((s, a, rs, dist))            # Add to trajectory
-                s = s_p
-                score += np.array([rs[t] for t in self.tasks])
-                if s_p.is_terminal():
-                    break
-            self._update_listeners(tau, Tau)
-            print("Score: ", score)
-            B.append(tau)                        # Add trajectory and scheduling choices to replay buffer
-            self.learner()
+        tau = []                                    # Store trajectory as list of (state, action)-tuples
+        Tau = []                                    # Store tasks that have been scheduled
+        h = 0                                       # Keep track of how many tasks have been scheduled so far
+        score = 0
+        for t in range(T):                          # Repeat for T time steps
+            if t % xi == 0:                         # Check if a new task should be scheduled
+                task = random.choice(self.tasks)    # If so, sample a new task from the scheduler
+                Tau.append(task)
+                print("Switching to ", task)
+                h += 1                              # Update number of tasks scheduled
+            a, dist = pi_theta.\
+                sample_distribution(s, Tau[-1])     # Sample action according to latest task
+            s_p, rs = self.env.step(a)              # Execute action, obtain observation and rewards
+            tau.append((s, a, rs, dist))            # Add to trajectory
+            s = s_p
+            score += np.array([rs[t] for t in self.tasks])
+            if s_p.is_terminal():
+                break
+        self._update_listeners(tau, Tau)
+        print("Score: ", score)
+        B.append(tau)                        # Add trajectory and scheduling choices to replay buffer
 
     def learner(self):
+        """
+        Takes 1 learner step
+        """
         for N in range(self.N_learn):
             trajectories = self.sample_trajectories()
 
             # TODO: Both these methods take the full trajectories at the moment, a speedup could be achieved here
             self.qmodel.train(trajectories)
             self.amodel.train(trajectories)
+
+    def learn(self, num_episodes=10000):
+        for i in range(num_episodes):
+            self.actor()
+            self.learner()
 
     def sample_trajectories(self):
         minibatch = []
