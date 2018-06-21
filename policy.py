@@ -139,6 +139,41 @@ class EpsilonGreedyPolicy(Policy):
             return super(EpsilonGreedyPolicy, self).sample(state)   # Sample greedily
 
 
+class BoltzmannPolicy(Policy):
+    def __init__(self, temperature):
+        self.temperature = temperature
+
+    def _actions_from(self, state):
+        raise NotImplementedError
+
+    def _actions_values_from(self, state):
+        raise NotImplementedError
+
+    def distribution(self, state):
+        dist = dict()
+        total = 0
+        for a, v in self._actions_values_from(state):
+            exp_v = np.exp(v/self.temperature)
+            total += exp_v
+            dist[a] = exp_v
+        return {a: v/total for a, v in dist.items()}
+
+    def sample(self, state):
+        dist = self.distribution(state)
+
+        choice = np.random.random()
+        cumulative_p = 0
+
+        for a, p in dist.items():
+            cumulative_p += p
+            if p > choice:
+                return a
+
+
+
+
+
+
 if __name__ == '__main__':
 
     class TestPolicy(EpsilonGreedyPolicy):
