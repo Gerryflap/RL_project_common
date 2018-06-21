@@ -2,7 +2,7 @@
     An implementation of an Actor Critic Agent
 
     Q returns calculated using: Sarsa-λ
-    Policy is updated by maximizing π(s) * ( Q(s, θ') - α*log(π(s) )
+    Policy is updated by maximizing π(s) * ( Q(s, θ') - α*log(π(s) ) or using the A2C/A3C formula and advantage
 
 """
 from collections import deque
@@ -22,6 +22,7 @@ class ActorCriticAgent(Agent):
                  policy_model: PNetwork,
                  replay_memory_size: int=3000,
                  minibatch_size: int=32,
+                 a2c=False
                  ):
         """
         Initializes the Actor Critic Agent
@@ -32,6 +33,7 @@ class ActorCriticAgent(Agent):
         :param minibatch_size: The size of minibatches used for training
         """
         super().__init__(env)
+        self.a2c = a2c
         self.value_model = value_model
         self.policy_model = policy_model
         policy_model.q_network = value_model

@@ -24,7 +24,8 @@ class PNetwork(Policy):
                  alpha=0.0001,
                  entropy_regularization=0.1,
                  q_network: QNetworkSL = None,
-                 fixed_steps=1000
+                 fixed_steps=1000,
+                 use_advantage=False
                  ):
         """
         A Tasked policy network
@@ -37,7 +38,10 @@ class PNetwork(Policy):
             This can be left None if it's set later (for instance by the SACU actor)
         :param fixed_steps: The number of training steps that the fixed network is kept fixed.
             After these steps it's updated and the step counter is reset.
+        :param use_advantage: When set to true: calculate and use A(s, a) instead of Q(s, a) for policy update
+            This will make the agent A2C
         """
+        self.use_advantage = use_advantage
         self.fixed_steps = fixed_steps
         self.steps = 0
         self.action_space = action_space
@@ -47,7 +51,11 @@ class PNetwork(Policy):
         self.fixed_model = ks.models.model_from_json(model.to_json())
         self.state_transformer = state_transformer
 
-        self.model.compile(optimizer=ks.optimizers.Adam(alpha), loss=self._make_policy_loss(entropy_regularization))
+        if use_advantage:
+            self.model.compile(optimizer=ks.optimizers.Adam(alpha, clipnorm=1), loss=self._make_advantage_policy_loss(entropy_regularization))
+        else:
+            self.model.compile(optimizer=ks.optimizers.Adam(alpha, clipnorm=1), loss=self._make_policy_loss(entropy_regularization))
+
 
     def distribution(self, state: State) -> dict:
         s = self.state_transformer(state)
@@ -75,8 +83,16 @@ class PNetwork(Policy):
         # Predict the Q-values  for all actions for each of the states using Q(s, θ')
         q_values = self.q_network.Qp_array(xs)
 
-        # Fit the live model on the Q-values using the policy loss function
-        self.model.fit(xs, q_values, verbose=False, batch_size=len(trajectories))
+        # Fit the live model on the policy loss function
+        if self.use_advantage:
+            a_values = self._calculate_advantage(xs, q_values)
+            history = self.model.fit(xs, a_values, verbose=False, batch_size=len(trajectories))
+        else:
+            history = self.model.fit(xs, q_values, verbose=False, batch_size=len(trajectories))
+
+
+        if np.isnan(history.history['loss'][0]):
+            raise ValueError("NaN output, quitting training.")
 
         # Related to the fixed parameter update
         self.steps += 1
@@ -92,6 +108,24 @@ class PNetwork(Policy):
             return loss
 
         return policy_loss
+
+    @staticmethod
+    def _make_advantage_policy_loss(entropy_regularization):
+        # Can also be used with advantage values instead of q values to make this an A2C agent
+        def policy_loss(a_values, y_pred):
+            policy = y_pred
+            policy = ks.backend.clip(policy, 1e-10, 1)
+            loss = -tf.reduce_mean(tf.reduce_sum(tf.log(policy) * (a_values - entropy_regularization * tf.log(policy)), axis=1))
+            return loss
+
+        return policy_loss
+
+    def _calculate_advantage(self, states, q_values):
+        policies = self.fixed_model.predict(states)
+        values = policies * q_values
+        values = np.sum(values, axis=1, keepdims=True)
+        advantages = q_values - values
+        return advantages
 
     def sample(self, state: State, dist=None) -> Action:
         if dist is None:
@@ -121,6 +155,9 @@ class PNetwork(Policy):
 
     def sync(self):
         self.fixed_model.set_weights(self.model.get_weights())
+
+    def restore_weights(self):
+        self.model.set_weights(self.fixed_model.get_weights())
 
 
 

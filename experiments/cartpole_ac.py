@@ -3,6 +3,7 @@ from p_network import PNetwork
 if __name__ == '__main__':
     import keras as ks
     import numpy as np
+    from keras import backend as K
     from agents.actor_critic import ActorCriticAgent
     from environments.cartpole import CartPole
     from q_network_sarsa_lambda import QNetworkSL
@@ -43,8 +44,9 @@ if __name__ == '__main__':
             actions,
             lambda x: np.array(x.state),
             fixed_steps=100,
-            entropy_regularization=0.1,
-            alpha=0.001
+            entropy_regularization=0.01,
+            alpha=0.001,
+            use_advantage=False
         )
 
         ac = ActorCriticAgent(env, dn, pn,
