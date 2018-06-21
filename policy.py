@@ -152,7 +152,7 @@ class BoltzmannPolicy(Policy):
     def distribution(self, state):
         dist = dict()
         total = 0
-        for a, v in self._actions_values_from(state):
+        for a, v in self._actions_values_from(state).items():
             exp_v = np.exp(v/self.temperature)
             total += exp_v
             dist[a] = exp_v
@@ -161,12 +161,13 @@ class BoltzmannPolicy(Policy):
     def sample(self, state):
         dist = self.distribution(state)
 
+        print(dist)
         choice = np.random.random()
         cumulative_p = 0
 
         for a, p in dist.items():
             cumulative_p += p
-            if p > choice:
+            if cumulative_p > choice:
                 return a
 
 
