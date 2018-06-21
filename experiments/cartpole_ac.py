@@ -47,12 +47,12 @@ if __name__ == '__main__':
             alpha=0.001
         )
 
-        a2c = ActorCriticAgent(env, dn, pn,
+        ac = ActorCriticAgent(env, dn, pn,
                                replay_memory_size=1000
                                )
 
-        c = a2c.get_configuration()
+        c = ac.get_configuration()
         print(c)
         experiment = l.start_experiment(c)
-        q = a2c.learn(num_episodes=1000, result_handler=experiment.log)
+        q = ac.learn(num_episodes=1000, result_handler=experiment.log)
         experiment.save_attribute("weights", value_network.get_weights())
