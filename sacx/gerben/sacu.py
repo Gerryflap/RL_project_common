@@ -73,7 +73,7 @@ class SACU(object):
         score = 0
         for t in range(T):                          # Repeat for T time steps
             if t % xi == 0:                         # Check if a new task should be scheduled
-                task = random.choice(self.tasks)    # If so, sample a new task from the scheduler
+                task = self.schedule_task(Tau)      # If so, sample a new task from the scheduler
                 Tau.append(task)
                 print("Switching to ", task)
                 h += 1                              # Update number of tasks scheduled
@@ -88,6 +88,8 @@ class SACU(object):
         self._update_listeners(tau, Tau)
         print("Score: ", score)
         B.append(tau)                        # Add trajectory and scheduling choices to replay buffer
+
+        self.train_scheduler(tau, Tau)
 
     def learner(self):
         """
@@ -105,6 +107,10 @@ class SACU(object):
             self.actor()
             self.learner()
 
+
+    def schedule_task(self, Tau):
+        return random.choice(self.tasks)
+
     def sample_trajectories(self):
         minibatch = []
         for i in range(self.num_avg_gradient):
@@ -116,4 +122,8 @@ class SACU(object):
     def _update_listeners(self, trajectory, tasks):
         for listener in self.listeners:
             listener.log(trajectory, tasks)
+
+    def train_scheduler(self, tau, Tau):
+        # SAC-U doesn't have a trained scheduler
+        pass
 
