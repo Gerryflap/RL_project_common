@@ -9,6 +9,7 @@ if __name__ == '__main__':
     from sacx.gerben.tasked_q_network import QNetwork
     from sacx.gerben.tasked_p_network import PolicyNetwork
     from sacx.gerben.sacu import SACU
+    from sacx.gerben.sacq import SACQ
     from sacx.gerben.extcore import Task
 
     env = MountainCar()
@@ -41,6 +42,6 @@ if __name__ == '__main__':
     p_network = PolicyNetwork((2,), actions, tasks, common_net,
                          task_p_net, lambda s: s.state, entropy_regularization=0.005, alpha=0.0001, fixed_steps=100)
 
-    agent = SACU(env, q_network, p_network, tasks, num_learn=100, scheduler_period=200, listeners=listeners)
+    agent = SACQ(env, q_network, p_network, tasks, num_learn=100, scheduler_period=200, listeners=listeners)
 
     agent.learn()
