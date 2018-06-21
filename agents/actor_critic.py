@@ -21,8 +21,7 @@ class ActorCriticAgent(Agent):
                  value_model: QNetworkSL,
                  policy_model: PNetwork,
                  replay_memory_size: int=3000,
-                 minibatch_size: int=32,
-                 a2c=False
+                 minibatch_size: int=32
                  ):
         """
         Initializes the Actor Critic Agent
@@ -33,7 +32,6 @@ class ActorCriticAgent(Agent):
         :param minibatch_size: The size of minibatches used for training
         """
         super().__init__(env)
-        self.a2c = a2c
         self.value_model = value_model
         self.policy_model = policy_model
         policy_model.q_network = value_model
