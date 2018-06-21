@@ -16,7 +16,6 @@ import numpy as np
 
 
 class ActorCriticAgent(Agent):
-
     def __init__(self,
                  env: FiniteActionEnvironment,
                  value_model: QNetworkSL,
@@ -24,6 +23,14 @@ class ActorCriticAgent(Agent):
                  replay_memory_size: int=3000,
                  minibatch_size: int=32,
                  ):
+        """
+        Initializes the Actor Critic Agent
+        :param env: The environment to operate on
+        :param value_model: A QNetworkSL that predicts the value function
+        :param policy_model: A PNetwork used to train and estimate a policy
+        :param replay_memory_size: The size of the replay memory in #Trajectories
+        :param minibatch_size: The size of minibatches used for training
+        """
         super().__init__(env)
         self.value_model = value_model
         self.policy_model = policy_model
@@ -32,6 +39,12 @@ class ActorCriticAgent(Agent):
         self.minibatch_size = minibatch_size
 
     def learn(self, num_episodes: int = 1000000, result_handler=None) -> Policy:
+        """
+        Trains the agent for a specified number of episodes
+        :param num_episodes: The number of episodes to train
+        :param result_handler: A result handler that will process the results
+        :return: The policy model that has been trained
+        """
         Q, pi = self.value_model, self.policy_model
         for i in range(num_episodes):
             s = self.env.reset()
@@ -66,12 +79,13 @@ class ActorCriticAgent(Agent):
         return pi
 
     def epsilon(self, state):
+        # This Agent doesn't have an epsilon
         return 0
 
     def sample_minibatch(self) -> list:
         """
         Get a random minibatch of samples from current replay memory
-        :return: A list of samples
+        :return: A list of samples (#minibatch_size trajectories)
         """
         batch = []
         for i in range(self.minibatch_size):

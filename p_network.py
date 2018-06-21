@@ -72,8 +72,11 @@ class PNetwork(Policy):
 
         xs = np.concatenate(xs, axis=0)
 
+        # Predict the Q-values  for all actions for each of the states using Q(s, θ')
         q_values = self.q_network.Qp_array(xs)
-        self.model.fit(xs, q_values, verbose=False)
+
+        # Fit the live model on the Q-values using the policy loss function
+        self.model.fit(xs, q_values, verbose=False, batch_size=len(trajectories))
 
         # Related to the fixed parameter update
         self.steps += 1
