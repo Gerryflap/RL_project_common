@@ -13,7 +13,7 @@ def experiment(run_n, episodes, sigmas, lambda_parameter):
 
     from experiment_util import Logger
 
-    filename = ("../results/cartpole_deepsarsalambda_lambda_%1.2f_%d.h5" %(lambda_parameter, run_n))
+    filename = ("results/cartpole_deepsarsalambda_lambda_%1.2f_%d.h5" %(lambda_parameter, run_n))
     l = Logger(filename= filename)
 
 
@@ -56,6 +56,7 @@ if __name__ == "__main__":
     episodes = 250
     sigmas = np.array([0, 10**-2, 10**-1, 10**-0])
     lambdas = np.array([0, 0.5, 0.75, 0.9, 1])
+    #lambdas = np.array([0])
 
     with Pool(processes=64) as pool:
         for i in pool.starmap(experiment, [(run_n, episodes, sigmas, l) for l in lambdas for run_n in range(runs)]):
