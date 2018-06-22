@@ -43,7 +43,7 @@ def snake_deep_sarsa(episodes=5000, file_name='snek'):
 
 if __name__ == '__main__':
     jobs = [Process(target=snake_deep_sarsa,
-                    args=(5000, '../results/snake_continuous_deep_sarsa_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
+                    args=(50, '../results/snake_continuous_deep_sarsa_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
     for j in jobs:
         j.start()
     for j in jobs:
