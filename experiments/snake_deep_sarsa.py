@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001), loss='mse')
 
-    env = SnakeDiscrete(render=True, render_freq=100)
+    env = SnakeDiscrete(render=True, render_freq=10)
     actions = env.valid_actions()
 
     dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 9)),

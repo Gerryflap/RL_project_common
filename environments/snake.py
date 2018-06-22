@@ -87,12 +87,11 @@ class SnakeVisual(FiniteActionEnvironment):
         if self.render:
             self.env.render()
         state, reward, self.terminal, info = self.env.step(action.direction)
-        state = self._process_state(state)
         return SnakeState(state, self.terminal), reward
 
     @staticmethod
     def _process_state(state):
-        state = np.reshape(state, (15,-1))
+        state = np.reshape(state, (15, -1))
         return state
 
     def _toggle_rendering(self):
@@ -114,7 +113,7 @@ class SnakeVisual(FiniteActionEnvironment):
         """
         self._toggle_rendering()
         self.terminal = False
-        state = self._process_state(self.env.reset())
+        state = self.env.reset()
         return SnakeState(state, self.terminal)
 
 

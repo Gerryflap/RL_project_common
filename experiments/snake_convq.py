@@ -11,7 +11,7 @@ if __name__ == '__main__':
     size = np.shape(env.reset().state)
 
     nn = ks.models.Sequential()
-    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid', input_shape=size + (1,)))
+    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid', input_shape=size))
     nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid'))
     nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid'))
     nn.add(ks.layers.Flatten())
@@ -23,7 +23,7 @@ if __name__ == '__main__':
     print(nn.summary())
 
     def normalize_state(s):
-        return np.reshape(s.state, newshape=(1,) + size + (1,))
+        return np.reshape(s.state, newshape=(1,) + size)
 
 
     dqn = QNetwork(nn, actions, normalize_state)
