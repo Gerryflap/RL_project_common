@@ -56,7 +56,7 @@ class Environment(Configurable):
         """
         raise NotImplementedError
 
-    def reset(self) -> State:
+    def reset(self):
         """
         Reset the internal model state
         :return: an initial observation
@@ -103,5 +103,5 @@ class FiniteActionEnvironment(Environment):
     def step(self, action: Action) -> tuple:
         raise NotImplementedError
 
-    def reset(self) -> State:
+    def reset(self):
         raise NotImplementedError

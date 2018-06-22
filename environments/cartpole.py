@@ -1,4 +1,5 @@
 import gym
+import numpy as np
 
 from core import State, Action, FiniteActionEnvironment
 
@@ -93,9 +94,54 @@ class CartPole(FiniteActionEnvironment):
         return CartPoleState(self.env.reset(), self.terminal)
 
 
+class NoisyCartPole(CartPole):
+    """
+        CartPole environment that adds Gaussian noise to the state observations
+    """
+
+    def __init__(self, std, *args, **kwargs):
+        """
+        Create a new NoisyCartPole environment
+        :param std: Standard deviation of the noise distribution (mean=0)
+        :param args: Additional arguments to pass to the super class
+        :param kwargs: Additional named arguments to pass to the super class
+        """
+        self.std = std
+        super().__init__(*args, **kwargs)
+
+    def add_noise(self, state: CartPoleState) -> CartPoleState:
+        """
+        Adds Gaussian noise to the given state
+        :param state: The state on which noise should be applied
+        :return: the state argument, but with noise added
+        """
+        state.state[0] += np.random.normal(loc=0, scale=self.std) * 2.4
+        state.state[1] += np.random.normal(loc=0, scale=self.std) * 3.6
+        state.state[2] += np.random.normal(loc=0, scale=self.std) * 0.26
+        state.state[3] += np.random.normal(loc=0, scale=self.std) * 3.5
+        return state
+
+    def step(self, action: CartPoleAction) -> tuple:
+        """
+        Perform a regular CartPole environment step. Add noise to the observation
+        :param action: The action to perform
+        :return: a two-tuple of a noisy observation and a reward
+        """
+        s, r = super().step(action)
+        return self.add_noise(s), r
+
+    def reset(self):
+        """
+        Perform a regular CartPole environment reset. Add noise to the observation
+        :return: a noisy initial observation
+        """
+        s = super().reset()
+        return self.add_noise(s)
+
+
 if __name__ == '__main__':
 
-    _e = CartPole(render=True)
+    _e = NoisyCartPole(std=0.1, render=True)
     _s = _e.reset()
 
     for _ in range(1000):
