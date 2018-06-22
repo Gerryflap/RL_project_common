@@ -252,6 +252,11 @@ class SnakeContinuous(FiniteActionEnvironment):
     def valid_actions(self) -> list:
         return SnakeContinuous.action_space()
 
+    @staticmethod
+    def flatten_state(s):
+        food_d, food_a, dists = s
+        return np.concatenate(([food_d], [food_a], dists))
+
     def step(self, action: SnakeAction) -> tuple:
         """
         Perform an action on the current environment state
@@ -263,6 +268,8 @@ class SnakeContinuous(FiniteActionEnvironment):
         if self.render:
             self.env.render()
         state, reward, self.terminal, info = self.env.step(action.direction)
+        if not self.terminal:
+            state = SnakeContinuous.flatten_state(state)
         return SnakeState(state, self.terminal), reward
 
     def _toggle_rendering(self):
@@ -286,7 +293,7 @@ class SnakeContinuous(FiniteActionEnvironment):
 
         self.terminal = False
         s = self.env.reset()
-        return SnakeState(s, self.terminal)
+        return SnakeState(SnakeContinuous.flatten_state(s), self.terminal)
 
 
 if __name__ == '__main__':
@@ -297,4 +304,5 @@ if __name__ == '__main__':
     for _ in range(1000):
         while not _s.is_terminal():
             _s, _r = _e.step(_e.sample())
+            print(_s)
         _s = _e.reset()
