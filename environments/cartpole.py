@@ -1,4 +1,5 @@
 import gym
+import numpy as np
 
 from core import State, Action, FiniteActionEnvironment
 
@@ -91,6 +92,28 @@ class CartPole(FiniteActionEnvironment):
         """
         self.terminal = False
         return CartPoleState(self.env.reset(), self.terminal)
+
+
+class NoisyCartPole(CartPole):
+
+    def __init__(self, std):
+        super().__init__()
+        self.std = std
+
+    def add_noise(self, state: CartPoleState) -> CartPoleState:
+        state.state[0] += np.random.normal(loc=0, scale=self.std) * 2.4
+        state.state[1] += np.random.normal(loc=0, scale=self.std) * 3.6
+        state.state[2] += np.random.normal(loc=0, scale=self.std) * 0.26
+        state.state[3] += np.random.normal(loc=0, scale=self.std) * 3.5
+        return state
+
+    def step(self, action: CartPoleAction) -> tuple:
+        s, r = super(CartPole, self).step(action)
+        return self.add_noise(s), r
+
+    def reset(self):
+        s = super(CartPole, self).reset()
+        return self.add_noise(s)
 
 
 if __name__ == '__main__':
