@@ -46,7 +46,7 @@ if __name__ == '__main__':
             fixed_steps=100,
             entropy_regularization=0.01,
             alpha=0.001,
-            use_advantage=False
+            use_advantage=True
         )
 
         ac = ActorCriticAgent(env, dn, pn,
