@@ -61,7 +61,7 @@ if __name__ == "__main__":
     sigmas = np.array([0, 10**-2, 10**-1, 10**-0])
     lambdas = np.array([0, 0.5, 0.75, 0.9, 1])
 
-    with Pool(processes=32) as pool:
+    with Pool(processes=12) as pool:
         for i in pool.starmap(experiment, [(runs, episodes, sigmas, l) for l in lambdas]):
             print("Finished %s" % i) 
     

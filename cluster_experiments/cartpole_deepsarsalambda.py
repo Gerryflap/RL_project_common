@@ -32,14 +32,15 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
             
             dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
                              lambd=lambda_parameter,
-                             gamma=0.9,
+                             lambda_min=1e-3,
+                             gamma=1.0,
                              reward_factor=0.01,
                              fixed_length=100)
 
             dql = DeepSarsa(env, dqn,
-                            epsilon=0.3,
-                            epsilon_step_factor=0.99995,
-                            epsilon_min=0.05,
+                            epsilon=1.0,
+                            epsilon_step_factor=0.9995,
+                            epsilon_min=0.0,
                             replay_memory_size=1000
             )
 
