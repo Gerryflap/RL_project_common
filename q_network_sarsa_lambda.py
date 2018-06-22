@@ -47,7 +47,10 @@ class QNetworkSL(QEstimator):
         if self.lambda_min != 0:
             if lambd == 0:
                 self.max_trajectory_length = 2
+            elif lambd == 1:
+                self.max_trajectory_length = None
             else:
+                print(lambd, self.lambda_min)
                 self.max_trajectory_length = max(2, int(math.log(self.lambda_min, lambd)))
             print("Capping trajectories at a max length of ", self.max_trajectory_length)
         self.fix_lambda_skew = fix_lambda_skew

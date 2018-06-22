@@ -5,6 +5,11 @@ import os
 
 
 def experiment(run_n, episodes, sigmas, lambda_parameter):
+    import tensorflow as tf
+    from keras.backend.tensorflow_backend import set_session
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 0.2
+    set_session(tf.Session(config=config))
     import keras as ks
     import numpy as np
     from agents.deep_sarsa import DeepSarsa
@@ -58,7 +63,7 @@ if __name__ == "__main__":
     lambdas = np.array([0, 0.5, 0.75, 0.9, 1])
     #lambdas = np.array([0])
 
-    with Pool(processes=64) as pool:
+    with Pool(processes=4) as pool:
         for i in pool.starmap(experiment, [(run_n, episodes, sigmas, l) for l in lambdas for run_n in range(runs)]):
             print("Finished %s" % i) 
     
