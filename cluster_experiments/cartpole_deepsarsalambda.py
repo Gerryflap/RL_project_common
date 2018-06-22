@@ -8,7 +8,7 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
     import keras as ks
     import numpy as np
     from agents.deep_sarsa import DeepSarsa
-    from environments.cartpole import CartPole
+    from environments.cartpole import NoisyCartPole
     from q_network_sarsa_lambda import QNetworkSL
 
     from experiment_util import Logger
@@ -27,7 +27,7 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
             neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001),
                                    loss='mse')
                     
-            env = CartPole(render=False)
+            env = NoisyCartPole(std= sigma, render=False)
             actions = env.valid_actions()
             
             dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
@@ -47,7 +47,7 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
             experiment = l.start_experiment( c )
             q = dql.learn( num_episodes=episodes, result_handler=experiment.log)
             experiment.save_attribute("weights", neural_network.get_weights())
-            print("%s finished sigma=%1.2f, run=%i" (filename, sigma, run_n) )
+            print("%s finished sigma=%1.2f, run=%i" % (filename, sigma, run_n) )
     return filename
 
 if __name__ == "__main__":
