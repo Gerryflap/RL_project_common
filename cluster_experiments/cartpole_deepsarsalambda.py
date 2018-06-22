@@ -53,7 +53,7 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
 
 if __name__ == "__main__":
     runs = 5
-    episodes = 500
+    episodes = 250
     sigmas = np.array([0, 10**-2, 10**-1, 10**-0])
     lambdas = np.array([0, 0.5, 0.75, 0.9, 1])
 
