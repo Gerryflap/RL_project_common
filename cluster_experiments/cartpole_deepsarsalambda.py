@@ -1,7 +1,10 @@
-import multiprocessing as mp
+from multiprocessing import Pool, TimeoutError
+import numpy as np
+import time
+import os
 
 
-def experiment(runs, episodes, sigmas, lambd):
+def experiment(runs, episodes, sigmas, lambda_parameter):
     import keras as ks
     import numpy as np
     from agents.deep_sarsa import DeepSarsa
@@ -9,7 +12,9 @@ def experiment(runs, episodes, sigmas, lambd):
     from q_network_sarsa_lambda import QNetworkSL
 
     from experiment_util import Logger
-    l = Logger()
+
+    filename = ("results/cartpole_deepsarsalambda_lambda_%1.2f.h5" %lambda_parameter)
+    l = Logger(filename= filename)
 
     for run_n in range(runs):
         for sigma in sigmas:
@@ -26,7 +31,7 @@ def experiment(runs, episodes, sigmas, lambd):
             actions = env.valid_actions()
             
             dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
-                             lambd=lambd[i],
+                             lambd=lambda_parameter,
                              gamma=0.9,
                              reward_factor=0.01,
                              fixed_length=100)
@@ -39,17 +44,20 @@ def experiment(runs, episodes, sigmas, lambd):
             )
 
             c = dql.get_configuration()
-            print(c)
             experiment = l.start_experiment( c )
-            q = dql.learn( num_episodes=200, result_handler=experiment.log)
+            q = dql.learn( num_episodes=episodes, result_handler=experiment.log)
             experiment.save_attribute("weights", neural_network.get_weights())
+            print("%s finished sigma=%1.2f, run=%i" (filename, sigma, run_n) )
+    return filename
 
 if __name__ == "__main__":
     runs = 5
     episodes = 500
-    sigmas = np.array([0 10e-2 10e-1 10e-0])
-    lambdas = np.array([0 0.5 0.75 0.9 1])
+    sigmas = np.array([0, 10**-2, 10**-1, 10**-0])
+    lambdas = np.array([0, 0.5, 0.75, 0.9, 1])
 
-    
+    with Pool(processes=32) as pool:
+        for i in pool.starmap(experiment, [(runs, episodes, sigmas, l) for l in lambdas]):
+            print("Finished %s" % i) 
     
     
