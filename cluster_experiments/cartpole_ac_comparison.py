@@ -1,11 +1,11 @@
 """
-    This Experiment runs a parameter sweep for Sarsa-λ A2C and Sarsa-λ Value based learning.
+    This Experiment runs Sarsa-λ A2C versus Sarsa-λ Value based learning.
     All parameters on the Value Function Approximator are the same,
         but Value based learning uses epsilon-greedy and A2C uses a policy approximator NN using the A2C loss function
 """
 
 
-def run_a2c_experiment(entropy_reg):
+def run_a2c_experiment(entropy_reg, run):
     import keras as ks
     import numpy as np
     from agents.actor_critic import ActorCriticAgent
@@ -28,7 +28,7 @@ def run_a2c_experiment(entropy_reg):
     policy_network.add(ks.layers.Dense(50, activation='relu', input_shape=(4,)))
     policy_network.add(ks.layers.Dense(2, activation='softmax'))
 
-    l = Logger(filename="../results/PARAM_SWEEP_cartpole_a2c_%.5f.h5"%entropy_reg)
+    l = Logger(filename="../results/AC_VS_SL_cartpole_a2c_%.5f_%d.h5"%(entropy_reg, run))
     env = CartPole(render=False)
     actions = env.valid_actions()
 
@@ -59,7 +59,8 @@ def run_a2c_experiment(entropy_reg):
     q = ac.learn(num_episodes=100, result_handler=experiment.log)
 
 
-def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay):
+def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay, run):
+
     import keras as ks
     import numpy as np
     from agents.deep_sarsa import DeepSarsa
@@ -76,7 +77,7 @@ def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay):
     value_network.compile(optimizer=ks.optimizers.Adam(lr=0.001),
                           loss='mse')
 
-    l = Logger(filename="../results/PARAM_SWEEP_cartpole_sl_%.4f_%.4f_%f.h5" % (epsilon_start ,epsilon_min, epsilon_decay))
+    l = Logger(filename="../results/AC_VS_SL_cartpole_sl_%.4f_%.4f_%f_%d.h5" % (epsilon_start ,epsilon_min, epsilon_decay, run))
     env = CartPole(render=False)
     actions = env.valid_actions()
 
@@ -99,23 +100,10 @@ def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay):
 if __name__ == "__main__":
     import multiprocessing as mp
     experiments = [
-        # lambda: run_a2c_experiment(0.01),
-        # lambda: run_a2c_experiment(0.1),
-        # lambda: run_a2c_experiment(0.03),
-        # lambda: run_a2c_experiment(0.005),
-        # lambda: run_a2c_experiment(0.001),
-        # lambda: run_saraslambda_experiment(0.9, 0.05, 0.99995),
-        # lambda: run_saraslambda_experiment(0.9, 0.05, 0.9999),
-        # lambda: run_saraslambda_experiment(0.9, 0.05, 0.99999),
-        # lambda: run_saraslambda_experiment(0.05, 0.05, 1.0),
-        # lambda: run_saraslambda_experiment(0.3, 0.05, 0.99995),
-        # lambda: run_saraslambda_experiment(0, 0, 0.99995),
-
-        lambda: run_a2c_experiment(0.007),
-        lambda: run_saraslambda_experiment(1.0, 0.00, 0.9995),
-        lambda: run_saraslambda_experiment(1.0, 0.00, 0.9996),
-        lambda: run_saraslambda_experiment(1.0, 0.00, 0.999),
+        lambda r: run_a2c_experiment(0.01, r),
+        lambda r: run_saraslambda_experiment(1.0, 0.00, 0.999, r),
     ]
 
     for experiment in experiments:
-        mp.Process(target=experiment).start()
+        for run in range(5):
+            mp.Process(target=experiment, args=(run,)).start()
