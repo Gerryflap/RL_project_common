@@ -3,7 +3,7 @@ from multiprocessing import Process
 NUM_RUNS = 5  # Number of runs of each experiment over which will be averaged later
 
 
-def snake_deep_sarsa(episodes=5000, file_name='snek'):
+def snake_conv_sarsa(episodes=5000, file_name='snek'):
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
@@ -13,22 +13,29 @@ def snake_deep_sarsa(episodes=5000, file_name='snek'):
     import numpy as np
     from experiment_util import Logger
     from agents.deep_sarsa import DeepSarsa
-    from environments.snake import SnakeContinuous
+    from environments.snake import SnakeVisual
     from q_network_sarsa_lambda import QNetworkSL
 
     logger = Logger(filename=file_name)
 
-    neural_network = ks.models.Sequential()
-    neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(9,)))
-    neural_network.add(ks.layers.Dense(50, activation='relu'))
-    neural_network.add(ks.layers.Dense(3, activation='linear'))
-
-    neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001), loss='mse')
-
-    env = SnakeContinuous(render=False, render_freq=10)
+    env = SnakeVisual(render=False, render_freq=10)
     actions = env.valid_actions()
+    size = np.shape(env.reset().state)
 
-    dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 9)),
+    nn = ks.models.Sequential()
+    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid', input_shape=size))
+    nn.add(ks.layers.Conv2D(filters=24, kernel_size=(5, 5), activation='sigmoid'))
+    nn.add(ks.layers.Conv2D(filters=32, kernel_size=(5, 5), activation='sigmoid'))
+    nn.add(ks.layers.Flatten())
+    nn.add(ks.layers.Dense(units=16, activation='sigmoid'))
+    nn.add(ks.layers.Dense(units=3, activation='linear'))
+
+    nn.compile(optimizer=ks.optimizers.Adam(lr=0.0001), loss='mse')
+
+    def normalize_state(s):
+        return np.reshape(s.state, newshape=(1,) + size)
+
+    dqn = QNetworkSL(nn, actions, normalize_state,
                      lambd=0.9,
                      gamma=0.9,
                      reward_factor=0.01,
@@ -41,15 +48,16 @@ def snake_deep_sarsa(episodes=5000, file_name='snek'):
                     epsilon_min=0.02,
                     replay_memory_size=1000
                     )
+
     experiment = logger.start_experiment(dql.get_configuration())
     q = dql.learn(num_episodes=episodes, result_handler=experiment.log)
-    experiment.save_attribute("weights", neural_network.get_weights())
+    experiment.save_attribute("weights", nn.get_weights())
 
 
 if __name__ == '__main__':
-    jobs = [Process(target=snake_deep_sarsa,
-                    args=(5000, './results/snake_continuous_deep_sarsa_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
+    jobs = [Process(target=snake_conv_sarsa,
+                    args=(5000, './results/snake_continuous_conv_sarsa_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
     for j in jobs:
         j.start()
-    for clj in jobs:
+    for j in jobs:
         j.join()

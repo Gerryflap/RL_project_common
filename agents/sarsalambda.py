@@ -15,6 +15,9 @@ class SarsaLambda(Agent):
                  env: FiniteActionEnvironment,
                  lam: float = 0.2,
                  gamma: float = 1.0,
+                 epsilon=0.05,
+                 epsilon_step_factor=1.0,
+                 epsilon_min=0.0,
                  fex: callable=lambda x: x
                  ):
         """
@@ -35,6 +38,12 @@ class SarsaLambda(Agent):
                                                  epsilon=self.epsilon)
         self.lam = lam
         self.gamma = gamma
+
+        self.epsilon_step_factor = epsilon_step_factor
+        self.epsilon_min = epsilon_min
+        self.epsilon_v = epsilon
+
+        
         self.fex = fex
 
     def learn(self, num_iter=100000, result_handler=None) -> EpsilonGreedyPolicy:
@@ -63,18 +72,29 @@ class SarsaLambda(Agent):
 
                 delta = r + self.gamma * Q[s_p, a_p] - Q[s, a]
                 for k in E.keys():
+                    # learning rate decays due to 1/N[k]
                     Q[k] += (1 / N[k]) * delta * E[k]
+                    #Q[k] += 0.1 * delta * E[k]
                     E[k] *= self.gamma * self.lam
 
+                self.epsilon_decay()
                 s, a = s_p, a_p
             if result_handler is not None:
                 result_handler(sum_reward)
         return pi
 
+    def epsilon_decay(self):
+        if self.epsilon_v > self.epsilon_min:
+            self.epsilon_v *= self.epsilon_step_factor
+        else:
+            self.epsilon_v = self.epsilon_min
+            
+        
     def epsilon(self, s):
-        N_0, N = 100, self.visit_count
-        return N_0 / (N_0 + N[s])
-
+        #N_0, N = 100, self.visit_count
+        #   return N_0 / (N_0 + N[s])
+        return self.epsilon_v
+    
     def env_reset(self):
         s = self.env.reset()
         return self.fex(s), s.is_terminal()
