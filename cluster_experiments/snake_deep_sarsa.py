@@ -4,6 +4,11 @@ NUM_RUNS = 5  # Number of runs of each experiment over which will be averaged la
 
 
 def snake_deep_sarsa(episodes=5000, file_name='snek'):
+    import tensorflow as tf
+    from keras.backend.tensorflow_backend import set_session
+    config = tf.ConfigProto()
+    config.gpu_options.per_process_gpu_memory_fraction = 1/NUM_RUNS-0.05
+    set_session(tf.Session(config=config))
     import keras as ks
     import numpy as np
     from experiment_util import Logger
