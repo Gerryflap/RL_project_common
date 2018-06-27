@@ -51,13 +51,14 @@ class SnakeVisual(FiniteActionEnvironment):
     LEFT = SnakeAction(3)
     ACTIONS = [RIGHT, DOWN, LEFT]
 
-    def __init__(self, render=True, render_freq=1):
+    def __init__(self, grid_size=[15, 15], render=True, render_freq=1):
         """
         Create a new Snake Environment
         :param render: A boolean indicating whether the environment should be rendered
         """
         super().__init__()
         self.env = gym.make('snake-rotate-visual-v0')
+        self.env.grid_size = grid_size
         self.render = False
         self.allow_rendering = render  # Flag to determine whether rendering may ever occur
         self.render_freq = render_freq  # How frequently should rendering occur
@@ -128,7 +129,7 @@ class SnakeDiscrete(FiniteActionEnvironment):
     LEFT = SnakeAction(3)
     ACTIONS = [RIGHT, DOWN, LEFT]
 
-    def __init__(self, render=True, render_freq=1):
+    def __init__(self, grid_size=[15, 15], render=True, render_freq=1):
         """
         Create a new Snake Environment
         :param render: A boolean indicating whether the environment should be rendered
@@ -136,6 +137,7 @@ class SnakeDiscrete(FiniteActionEnvironment):
         """
         super().__init__()
         self.env = gym.make('snake-rotate-v0')
+        self.env.grid_size = grid_size
         self.render = False
         self.allow_rendering = render  # Flag to determine whether rendering may ever occur
         self.render_freq = render_freq  # How frequently should rendering occur
@@ -226,7 +228,7 @@ class SnakeContinuous(FiniteActionEnvironment):
     LEFT = SnakeAction(3)
     ACTIONS = [RIGHT, DOWN, LEFT]
 
-    def __init__(self, render=True, render_freq=1):
+    def __init__(self, grid_size=[15, 15], render=True, render_freq=1):
         """
         Create a new Snake Environment
         :param render: A boolean indicating whether the environment should be rendered
@@ -234,6 +236,7 @@ class SnakeContinuous(FiniteActionEnvironment):
         """
         super().__init__()
         self.env = gym.make('snake-rotate-v0')
+        self.env.grid_size = grid_size
         self.render = False
         self.allow_rendering = render  # Flag to determine whether rendering may ever occur
         self.render_freq = render_freq  # How frequently should rendering occur
