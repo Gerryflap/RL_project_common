@@ -12,7 +12,7 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
 
     from experiment_util import Logger
 
-    filename = ("results/cartpole_sarsalambda_lambda_%1.2f.h5" %lambda_parameter)
+    filename = ("../results/cartpole_sarsalambda_lambda_%1.2f.h5" %lambda_parameter)
     l = Logger(filename= filename)
 
     def cartpole_discretization(x):
@@ -32,6 +32,13 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
         # pole velocity at tip
         out[3] = np.round( 10 * np.sqrt(np.abs(s[3])) * np.sign(s[3]), 0)
         return tuple(out)
+
+    def transform_state(s):
+        s = s.state
+        s *= np.array([1, 1, 10, 1])
+        s *= 2
+        s = np.round(s)
+        return str(s)
     
     for run_n in range(runs):
         for sigma in sigmas:
@@ -43,9 +50,9 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
                               lam=lambda_parameter,
                              gamma=1.0,
                              epsilon=1.0,
-                             epsilon_step_factor=0.9998,
+                             epsilon_step_factor=0.99995,
                              epsilon_min=0.0,
-                             fex=cartpole_discretization
+                             fex=transform_state
             )
 
             c = sl.get_configuration()
@@ -56,8 +63,8 @@ def experiment(runs, episodes, sigmas, lambda_parameter):
     return filename
 
 if __name__ == "__main__":
-    runs = 1
-    episodes = 500
+    runs = 5
+    episodes = 3000
     sigmas = np.array([0, 10**-2, 10**-1, 10**-0])
     lambdas = np.array([0, 0.5, 0.75, 0.9, 1])
 
