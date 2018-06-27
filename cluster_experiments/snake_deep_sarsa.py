@@ -30,15 +30,16 @@ def snake_deep_sarsa(episodes=5000, file_name='snek'):
 
     dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 9)),
                      lambd=0.9,
+                     lambda_min=1e-3,
                      gamma=0.9,
-                     reward_factor=0.01,
+                     reward_factor=1,
                      fixed_length=100
                      )
 
     dql = DeepSarsa(env, dqn,
                     epsilon=0.3,
-                    epsilon_step_factor=0.999,
-                    epsilon_min=0.02,
+                    epsilon_step_factor=0.998,
+                    epsilon_min=0.005,
                     replay_memory_size=1000
                     )
     experiment = logger.start_experiment(dql.get_configuration())
@@ -48,7 +49,7 @@ def snake_deep_sarsa(episodes=5000, file_name='snek'):
 
 if __name__ == '__main__':
     jobs = [Process(target=snake_deep_sarsa,
-                    args=(5000, './results/snake_continuous_deep_sarsa_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
+                    args=(5000, './results/snake_continuous_deep_sarsa_rf1_gammin1e-3_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
     for j in jobs:
         j.start()
     for clj in jobs:
