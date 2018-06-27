@@ -65,7 +65,7 @@ class SarsaLambda(Agent):
                 s_p, r, terminal = self.env_step(a)
                 N[s_p] += 1
                 sum_reward += r
-                a_p = pi.sample(s)
+                a_p = pi.sample(s_p)
 
                 E[s, a] += 1
                 N[s_p, a_p] += 1
