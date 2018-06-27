@@ -18,7 +18,7 @@ def snake_conv_sarsa(episodes=5000, file_name='snek'):
 
     logger = Logger(filename=file_name)
 
-    env = SnakeVisual(render=False, render_freq=10)
+    env = SnakeVisual(grid_size=[8, 8],render=False, render_freq=10)
     actions = env.valid_actions()
     size = np.shape(env.reset().state)
 
@@ -45,7 +45,7 @@ def snake_conv_sarsa(episodes=5000, file_name='snek'):
 
     dql = DeepSarsa(env, dqn,
                     epsilon=0.3,
-                    epsilon_step_factor=0.998,
+                    epsilon_step_factor=0.9999,
                     epsilon_min=0.005,
                     replay_memory_size=1000
                     )

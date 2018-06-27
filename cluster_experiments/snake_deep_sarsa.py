@@ -25,7 +25,7 @@ def snake_deep_sarsa(episodes=5000, file_name='snek'):
 
     neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001), loss='mse')
 
-    env = SnakeContinuous(render=False, render_freq=10)
+    env = SnakeContinuous(grid_size=[8, 8], render=False, render_freq=10)
     actions = env.valid_actions()
 
     dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 9)),
@@ -38,7 +38,7 @@ def snake_deep_sarsa(episodes=5000, file_name='snek'):
 
     dql = DeepSarsa(env, dqn,
                     epsilon=0.3,
-                    epsilon_step_factor=0.998,
+                    epsilon_step_factor=0.9999,
                     epsilon_min=0.005,
                     replay_memory_size=1000
                     )
