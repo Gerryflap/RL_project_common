@@ -9,7 +9,7 @@ if __name__ == '__main__':
     from experiment_util import Logger
     l = Logger()
 
-    lambd = [1.0, 0.9, 0.8, 0.6, 0.4, 0.2, 0.0]
+    lambd = [1.0]
     for i in range(len(lambd)):
         neural_network = ks.models.Sequential()
         neural_network.add(ks.layers.Dense(150, activation='relu', input_shape=(4,)))
@@ -19,25 +19,29 @@ if __name__ == '__main__':
         neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001),
                                loss='mse')
         
-        env = CartPole(render=True)
+        env = CartPole(render=False)
         actions = env.valid_actions()
         
         dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 4)),
                          lambd=lambd[i],
-                         gamma=0.9,
+                         lambda_min=1e-3,
+                         gamma=1.0,
                          reward_factor=0.01,
                          fixed_length=100
         )
         
         dql = DeepSarsa(env, dqn,
-                        epsilon=0.3,
-                        epsilon_step_factor=0.99995,
-                        epsilon_min=0.05,
+                        epsilon=1.0,
+                        epsilon_step_factor=0.9995,
+                        epsilon_min=0.0,
                         replay_memory_size=1000
         )
 
         c = dql.get_configuration()
         print(c)
         experiment = l.start_experiment( c )
-        q = dql.learn( num_episodes=200, result_handler=experiment.log)
-        experiment.save_attribute("weights", neural_network.get_weights())
+        try:
+            q = dql.learn( num_episodes=250, result_handler=experiment.log)
+        except KeyboardInterrupt:
+            pass
+        dqn.live_model.save_weights("weights")

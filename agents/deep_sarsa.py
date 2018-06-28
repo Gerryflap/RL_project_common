@@ -33,6 +33,7 @@ class DeepSarsa(Agent):
         Q, pi = self.qnetwork, self.policy
         for i in range(num_episodes):
             s = self.env.reset()
+            print(self.qnetwork.Q_array(np.zeros((1,4))))
             r_sum = 0
             trajectory = []
             
