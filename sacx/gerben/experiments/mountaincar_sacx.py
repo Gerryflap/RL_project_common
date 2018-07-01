@@ -42,6 +42,6 @@ if __name__ == '__main__':
     p_network = PolicyNetwork((2,), actions, tasks, common_net,
                          task_p_net, lambda s: s.state, entropy_regularization=0.005, alpha=0.0001, fixed_steps=100)
 
-    agent = SACQ(env, q_network, p_network, tasks, num_learn=30, scheduler_period=200, listeners=listeners, temperature=0.1)
+    agent = SACQ(env, q_network, p_network, tasks, num_learn=30, scheduler_period=200, listeners=listeners, temperature=0.01)
 
     agent.learn()

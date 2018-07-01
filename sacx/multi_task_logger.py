@@ -29,6 +29,7 @@ class PlottingMultiTaskLogger(MultiTaskLogger):
             self.scores[task] = []
             self.plots[task] = self.plt1.plot(self.scores[task], color=color)[0]
         self.scores["main_score"] = []
+        self.scores["main_score_avg"] = []
         self.main_plot = self.plt2.plot(self.scores["main_score"], color='red')[0]
 
     def log(self, trajectory, performed_tasks):
@@ -55,10 +56,14 @@ class PlottingMultiTaskLogger(MultiTaskLogger):
         main_score = sum([e[2][self.tasks[0]] for e in trajectory])
         self.scores["main_score"][-1] = main_score
 
+        window = self.scores["main_score"][-10:]
+        avg_score = sum(window)/len(window)
+        self.scores["main_score_avg"][-1] = avg_score
+
         for task, color in zip(self.tasks, self.colors):
             del self.plots[task]
             self.plots[task] = self.plt1.plot(self.scores[task], color=color)[0]
         del self.main_plot
-        self.main_plot = self.plt2.plot(self.scores["main_score"], color='red')[0]
+        self.main_plot = self.plt2.plot(self.scores["main_score_avg"], color='red')[0]
         plt.pause(0.01)
 
