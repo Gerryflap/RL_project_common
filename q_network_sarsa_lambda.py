@@ -20,7 +20,7 @@ class QNetworkSL(QEstimator):
             lambd: float=0.0,
             fixed_length=100,
             reward_factor=1.0,
-            fix_lambda_skew=True,
+            fix_lambda_skew=False,
             lambda_min=0.0
     ):
         """
@@ -32,7 +32,8 @@ class QNetworkSL(QEstimator):
         :param lambd: Lambda value
         :param fixed_length: Denotes the number of steps before the fixed network gets synced with the live network
         :param reward_factor: A scaling factor on the rewards. Allows for scaling the rewards if they become too large
-        :param fix_lambda_skew: Fixes an issue arising from finite trajectories.
+        :param fix_lambda_skew: (This is a wrong approach and has been deprecated!)
+            Fixes an issue arising from finite trajectories.
             Officially the lambda returns are scaled with (1-λ) * λ^k, which would result in a sum of 1 when taking
             k to infinity. In a practical situation, trajectories are not infinite an thus this scaling needs to be
             different. When this parameter is set to true, the total return will be divided by the sum of
@@ -161,11 +162,16 @@ class QNetworkSL(QEstimator):
 
                 if not self.fix_lambda_skew:
                     q_return *= (1 - self.lambd)
+                    # Add the remainder of the probability mass to the monte-carlo return as described in the slides:
+                    cumulative_probability_mass = lambda_sum * (1-self.lambd)
+                    remaining_probability_mass = 1 - cumulative_probability_mass
+                    q_return += remaining_probability_mass * total_discounted_reward
+
                 else:
                     q_return /= lambda_sum
             else:
                 # Use MC:
-                q_return = sum([r * self.gamma**i for i, (_, _, r) in enumerate(trajectory)])
+                q_return = sum([self.reward_factor * r * self.gamma**i for i, (_, _, r) in enumerate(trajectory)])
 
             action = trajectory[0][1]
             action = self.action_index_map[action]
