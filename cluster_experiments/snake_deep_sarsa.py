@@ -3,7 +3,7 @@ from multiprocessing import Process
 NUM_RUNS = 5  # Number of runs of each experiment over which will be averaged later
 
 
-def snake_deep_sarsa(episodes=5000, file_name='snek'):
+def snake_deep_sarsa(episodes=10000, file_name='snek'):
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()

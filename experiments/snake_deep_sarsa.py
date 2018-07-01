@@ -3,7 +3,7 @@ if __name__ == '__main__':
     import keras as ks
     import numpy as np
     from agents.deep_sarsa import DeepSarsa
-    from environments.snake import SnakeDiscrete
+    from environments.snake import SnakeContinuous
     from q_network_sarsa_lambda import QNetworkSL
 
     neural_network = ks.models.Sequential()
@@ -13,7 +13,7 @@ if __name__ == '__main__':
 
     neural_network.compile(optimizer=ks.optimizers.Adam(lr=0.001), loss='mse')
 
-    env = SnakeDiscrete(grid_size=[8, 8], render=True, render_freq=10)
+    env = SnakeContinuous(grid_size=[8, 8], render=True, render_freq=10)
     actions = env.valid_actions()
 
     dqn = QNetworkSL(neural_network, actions, lambda x: np.reshape(x.state, newshape=(1, 9)),

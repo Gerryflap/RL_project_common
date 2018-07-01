@@ -3,7 +3,7 @@ from multiprocessing import Process
 NUM_RUNS = 5  # Number of runs of each experiment over which will be averaged later
 
 
-def snake_conv_sarsa(episodes=5000, file_name='snek'):
+def snake_conv_sarsa(episodes=10000, file_name='snek'):
     import tensorflow as tf
     from keras.backend.tensorflow_backend import set_session
     config = tf.ConfigProto()
@@ -18,14 +18,14 @@ def snake_conv_sarsa(episodes=5000, file_name='snek'):
 
     logger = Logger(filename=file_name)
 
-    env = SnakeVisual(grid_size=[8, 8],render=False, render_freq=10)
+    env = SnakeVisual(grid_size=[8, 8], render=False, render_freq=10)
     actions = env.valid_actions()
     size = np.shape(env.reset().state)
 
     nn = ks.models.Sequential()
-    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid', input_shape=size))
-    nn.add(ks.layers.Conv2D(filters=24, kernel_size=(5, 5), activation='sigmoid'))
-    nn.add(ks.layers.Conv2D(filters=32, kernel_size=(5, 5), activation='sigmoid'))
+    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(3, 3), activation='sigmoid', input_shape=size))
+    nn.add(ks.layers.Conv2D(filters=24, kernel_size=(3, 3), activation='sigmoid'))
+    nn.add(ks.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='sigmoid'))
     nn.add(ks.layers.Flatten())
     nn.add(ks.layers.Dense(units=16, activation='sigmoid'))
     nn.add(ks.layers.Dense(units=3, activation='linear'))

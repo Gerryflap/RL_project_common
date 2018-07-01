@@ -6,14 +6,14 @@ if __name__ == '__main__':
     from environments.snake import SnakeVisual
     from q_network import QNetwork
 
-    env = SnakeVisual(render=True, render_freq=1)
+    env = SnakeVisual(grid_size=[8, 8], render=True, render_freq=1)
     actions = env.valid_actions()
     size = np.shape(env.reset().state)
 
     nn = ks.models.Sequential()
-    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid', input_shape=size))
-    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid'))
-    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(5, 5), activation='sigmoid'))
+    nn.add(ks.layers.Conv2D(filters=16, kernel_size=(3, 3), activation='sigmoid', input_shape=size))
+    nn.add(ks.layers.Conv2D(filters=24, kernel_size=(3, 3), activation='sigmoid'))
+    nn.add(ks.layers.Conv2D(filters=32, kernel_size=(3, 3), activation='sigmoid'))
     nn.add(ks.layers.Flatten())
     nn.add(ks.layers.Dense(units=16, activation='sigmoid'))
     nn.add(ks.layers.Dense(units=3,  activation='linear'))
