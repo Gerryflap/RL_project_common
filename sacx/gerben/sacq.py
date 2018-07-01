@@ -27,7 +27,8 @@ class SACQ(SACU):
         for h in range(len(Tau)):
             R = sum([r * self.gamma**k for k, r in enumerate(main_rewards[h*xi:])])
             self.M[Tau[h]] += 1
-            self.Q[tuple(Tau[:h]), Tau[h]] += (R - self.Q[tuple(Tau[:h]), Tau[h]])/self.M[Tau[h]]
+            #self.Q[tuple(Tau[:h]), Tau[h]] += (R - self.Q[tuple(Tau[:h]), Tau[h]])/self.M[Tau[h]]
+            self.Q[tuple(Tau[:h]), Tau[h]] += 0.1 * (R - self.Q[tuple(Tau[:h]), Tau[h]])
 
     def schedule_task(self, Tau):
         return self.scheduler.sample(tuple(Tau))

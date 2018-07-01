@@ -114,53 +114,58 @@ class QNetworkSL(QEstimator):
         # Calculate the target q values for each of the trajectories in the minibatch:
         for i, trajectory in enumerate(trajectories):
 
-            # Get all states in the trajectory (or up to a certain point when using lambda_min):
-            if self.max_trajectory_length is None:
-                states = np.array([self.phi(t[0])[0] for t in trajectory])
-            else:
-                states = np.array([self.phi(t[0])[0] for t in trajectory[:self.max_trajectory_length+1]])
-
-            if len(states) > 1:
-                # Shorten the states such that the current state is not in there
-                fixed_qs = self.live_model.predict(states[1:])
-
-            q_return = 0
-            total_discounted_reward = 0
-            # Used for fixing the "lambda skew" caused by the infinity assumption in the lambda return function
-            lambda_sum = 0
-
-            # Calculate all TD(n) returns and add them to the total to get TD(lambda)
-
-            iterations = len(trajectory)
-            if self.max_trajectory_length is not None:
-                iterations = min(iterations, self.max_trajectory_length)
-
-            for j in range(iterations):
-                s, a, r = trajectory[j]
-
-                r *= self.reward_factor
-
-                terminal_state = j == len(trajectory) - 1
-                if not terminal_state:
-                    _, ap, _ = trajectory[j+1]
-
-                    # Convert back to action index:
-                    ap = self.action_index_map[ap]
-
-                total_discounted_reward += r * self.gamma ** j
-
-                # Calculate the TD(n) return for n = j
-                if terminal_state:
-                    n_return = total_discounted_reward
+            if self.lambd != 1:
+                # Get all states in the trajectory (or up to a certain point when using lambda_min):
+                if self.max_trajectory_length is None:
+                    states = np.array([self.phi(t[0])[0] for t in trajectory])
                 else:
-                    n_return = total_discounted_reward + self.gamma**(j+1) * fixed_qs[j, ap]
-                q_return += self.lambd ** j * n_return
-                lambda_sum += self.lambd ** j
+                    states = np.array([self.phi(t[0])[0] for t in trajectory[:self.max_trajectory_length+1]])
 
-            if not self.fix_lambda_skew:
-                q_return *= (1 - self.lambd)
+                if len(states) > 1:
+                    # Shorten the states such that the current state is not in there
+                    fixed_qs = self.live_model.predict(states[1:])
+
+                q_return = 0
+                total_discounted_reward = 0
+                # Used for fixing the "lambda skew" caused by the infinity assumption in the lambda return function
+                lambda_sum = 0
+
+                # Calculate all TD(n) returns and add them to the total to get TD(lambda)
+
+
+                iterations = len(trajectory)
+                if self.max_trajectory_length is not None:
+                    iterations = min(iterations, self.max_trajectory_length)
+
+                for j in range(iterations):
+                    s, a, r = trajectory[j]
+
+                    r *= self.reward_factor
+
+                    terminal_state = j == len(trajectory) - 1
+                    if not terminal_state:
+                        _, ap, _ = trajectory[j+1]
+
+                        # Convert back to action index:
+                        ap = self.action_index_map[ap]
+
+                    total_discounted_reward += r * self.gamma ** j
+
+                    # Calculate the TD(n) return for n = j
+                    if terminal_state:
+                        n_return = total_discounted_reward
+                    else:
+                        n_return = total_discounted_reward + self.gamma**(j+1) * fixed_qs[j, ap]
+                    q_return += self.lambd ** j * n_return
+                    lambda_sum += self.lambd ** j
+
+                if not self.fix_lambda_skew:
+                    q_return *= (1 - self.lambd)
+                else:
+                    q_return /= lambda_sum
             else:
-                q_return /= lambda_sum
+                # Use MC:
+                q_return = sum([r * self.gamma**i for i, (_, _, r) in enumerate(trajectory)])
 
             action = trajectory[0][1]
             action = self.action_index_map[action]

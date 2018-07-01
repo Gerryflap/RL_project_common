@@ -76,6 +76,7 @@ class MountainCar(FiniteActionEnvironment, TaskEnvironment):
         self.render = render
 
         self.terminal = False
+        self.step_v = 0
 
         self.reset()
 
@@ -101,12 +102,12 @@ class MountainCar(FiniteActionEnvironment, TaskEnvironment):
         if self.render:
             self.env.render()
         state, reward, self.terminal, info = self.env.step(action.value)
-
+        self.step_v += 1
         rewards = {
-            MAIN_TASK: reward,
+            MAIN_TASK: 1 if self.terminal and self.step_v < 1000 else 0,           # Make it a true sparse reward task
             GO_LEFT: 1 if action == self.LEFT else 0,
             GO_RIGHT: 1 if action == self.RIGHT else 0,
-            GO_FAST: abs(state[1])*100
+            GO_FAST: 1 if abs(state[1] >= 0.03) else 0
         }
 
         return MountainCarState(state, self.terminal), rewards
@@ -117,6 +118,7 @@ class MountainCar(FiniteActionEnvironment, TaskEnvironment):
         :return: A state containing the initial state
         """
         self.terminal = False
+        self.step_v = 0
         return MountainCarState(self.env.reset(), self.terminal)
 
     @staticmethod
