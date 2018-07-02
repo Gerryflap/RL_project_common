@@ -57,7 +57,7 @@ def snake_conv_sarsa(episodes=10000, file_name='snek'):
 
 if __name__ == '__main__':
     jobs = [Process(target=snake_conv_sarsa,
-                    args=(5000, './results/snake_continuous_conv_sarsa_rf1_gammin1e-3_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
+                    args=(10000, './results/snake_continuous_conv_sarsa_rf1_gammin1e-3_run_' + str(i) + '.h5')) for i in range(NUM_RUNS)]
     for j in jobs:
         j.start()
     for j in jobs:
