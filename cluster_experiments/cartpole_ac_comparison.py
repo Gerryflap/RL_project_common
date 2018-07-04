@@ -56,7 +56,7 @@ def run_a2c_experiment(entropy_reg, run):
 
     c = ac.get_configuration()
     experiment = l.start_experiment(c)
-    q = ac.learn(num_episodes=100, result_handler=experiment.log)
+    q = ac.learn(num_episodes=250, result_handler=experiment.log)
 
 
 def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay, run):
@@ -94,7 +94,7 @@ def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay, run):
 
     c = sarsa.get_configuration()
     experiment = l.start_experiment(c)
-    q = sarsa.learn(num_episodes=100, result_handler=experiment.log)
+    q = sarsa.learn(num_episodes=250, result_handler=experiment.log)
 
 
 if __name__ == "__main__":
@@ -105,5 +105,5 @@ if __name__ == "__main__":
     ]
 
     for experiment in experiments:
-        for run in range(5):
+        for run in range(25):
             mp.Process(target=experiment, args=(run,)).start()

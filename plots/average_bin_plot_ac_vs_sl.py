@@ -4,7 +4,6 @@ from collections import defaultdict
 import h5py
 import json
 import numpy as np
-import pandas as pd
 import matplotlib.pyplot as plt
 
 STARTS_WITH = "AC_VS_SL"
@@ -55,12 +54,12 @@ if __name__ == "__main__":
         upper = means + stds
         lower = means - stds
 
-        xs = np.arange(0, 100, BIN_SIZE)
+        xs = np.arange(0, 250, BIN_SIZE)
 
         plt.fill_between(xs, upper, lower, color=color+"55")
         plt.plot(xs, means, color=color+"FF")
     plt.legend(["SARSA(λ)", "A2C(λ)"], title="Agent")
-    plt.xlabel("Epsiode")
+    plt.xlabel("Episode")
     plt.ylabel("Score")
     plt.savefig("../plots/plot_sl_vs_ac.png", dpi=300)
     plt.close()
