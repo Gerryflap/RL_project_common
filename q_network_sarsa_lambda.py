@@ -124,7 +124,7 @@ class QNetworkSL(QEstimator):
 
                 if len(states) > 1:
                     # Shorten the states such that the current state is not in there
-                    fixed_qs = self.live_model.predict(states[1:])
+                    fixed_qs = self.fixed_model.predict(states[1:])
 
                 q_return = 0
                 total_discounted_reward = 0
