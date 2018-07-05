@@ -1,10 +1,9 @@
 from collections import defaultdict
 
-import q_table as q_table
-
 from agent import Agent
-from core import DiscreteEnvironment
-from policy import EpsilonGreedy
+from core import FiniteActionEnvironment
+from policy import EpsilonGreedyPolicy
+from q_table import QTable
 
 
 class SarsaLambda(Agent):
@@ -12,29 +11,42 @@ class SarsaLambda(Agent):
         Sarsa-lambda Agent implementation
     """
 
-    def __init__(self, env: DiscreteEnvironment, lam: float = 0.2, gamma: float = 1.0):
+    def __init__(self,
+                 env: FiniteActionEnvironment,
+                 lam: float = 0.2,
+                 gamma: float = 1.0,
+                 epsilon=0.05,
+                 epsilon_step_factor=1.0,
+                 epsilon_min=0.0,
+                 fex: callable=lambda x: x
+                 ):
         """
         Create a new SarsaLambda Agent
         :param env: The environment the agent will learn from
         :param lam: The lambda parameter
         :param gamma: Reward discount factor
+        :param fex: Optional feature extraction from observation states
         """
         super().__init__(env)
         assert 0 <= lam <= 1
 
-        self.q_table = q_table.for_env(env)
+        self.q_table = QTable()
         self.visit_count = defaultdict(int)
         self.eligibility_trace = defaultdict(int)
-        self.policy = EpsilonGreedy(env.observation_space,
-                                    env.valid_actions,
-                                    self.q_table,
-                                    self.epsilon
-                                    )
-        self.env = env
+        self.policy = self.q_table.derive_policy(EpsilonGreedyPolicy,
+                                                 env.valid_actions_from,
+                                                 epsilon=self.epsilon)
         self.lam = lam
         self.gamma = gamma
 
-    def learn(self, num_iter=100000) -> EpsilonGreedy:
+        self.epsilon_step_factor = epsilon_step_factor
+        self.epsilon_min = epsilon_min
+        self.epsilon_v = epsilon
+
+        
+        self.fex = fex
+
+    def learn(self, num_iter=100000, result_handler=None) -> EpsilonGreedyPolicy:
         """
         Learn a policy from the environment
         :param num_iter: The number of iterations the algorithm should run
@@ -43,32 +55,53 @@ class SarsaLambda(Agent):
         N, Q, E, pi = self.visit_count, self.q_table, self.eligibility_trace, self.policy
         for _ in range(num_iter):
             E.clear()
-            s = self.env.reset()
+            s, terminal = self.env_reset()
             a = self.env.sample()
-
+            sum_reward = 0
             N[s] += 1
             N[s, a] += 1
 
-            while not s.is_terminal():
-                s_p, r = self.env.step(a)
+            while not terminal:
+                s_p, r, terminal = self.env_step(a)
                 N[s_p] += 1
-
-                a_p = pi(s)
+                sum_reward += r
+                a_p = pi.sample(s_p)
 
                 E[s, a] += 1
                 N[s_p, a_p] += 1
 
                 delta = r + self.gamma * Q[s_p, a_p] - Q[s, a]
                 for k in E.keys():
+                    # learning rate decays due to 1/N[k]
                     Q[k] += (1 / N[k]) * delta * E[k]
+                    #Q[k] += 0.1 * delta * E[k]
                     E[k] *= self.gamma * self.lam
 
+                self.epsilon_decay()
                 s, a = s_p, a_p
+            if result_handler is not None:
+                result_handler(sum_reward)
         return pi
 
+    def epsilon_decay(self):
+        if self.epsilon_v > self.epsilon_min:
+            self.epsilon_v *= self.epsilon_step_factor
+        else:
+            self.epsilon_v = self.epsilon_min
+            
+        
     def epsilon(self, s):
-        N_0, N = 100, self.visit_count
-        return N_0 / (N_0 + N[s])
+        #N_0, N = 100, self.visit_count
+        #   return N_0 / (N_0 + N[s])
+        return self.epsilon_v
+    
+    def env_reset(self):
+        s = self.env.reset()
+        return self.fex(s), s.is_terminal()
+
+    def env_step(self, a):
+        s, r = self.env.step(a)
+        return self.fex(s), r, s.is_terminal()
 
 
 class MonteCarlo(SarsaLambda):
@@ -76,7 +109,7 @@ class MonteCarlo(SarsaLambda):
         SarsaLambda with lambda=1 is equivalent to MonteCarlo
     """
 
-    def __init__(self, env: DiscreteEnvironment):
+    def __init__(self, env: FiniteActionEnvironment):
         super().__init__(env, lam=1)
 
 
@@ -85,7 +118,7 @@ class TD0(SarsaLambda):
         SarsaLambda with lambda=0 is equivalent to TD(0)
     """
 
-    def __init__(self, env: DiscreteEnvironment):
+    def __init__(self, env: FiniteActionEnvironment):
         super().__init__(env, lam=0)
 
 

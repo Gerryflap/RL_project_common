@@ -1,8 +1,8 @@
 if __name__ == '__main__':
     import numpy as np
     import matplotlib.pyplot as plt
-    from environments.easy21 import Easy21
     from agents.sarsalambda import SarsaLambda
+    from environments.easy21 import Easy21
 
     env = Easy21()
 

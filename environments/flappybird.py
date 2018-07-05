@@ -3,7 +3,7 @@ import pygame
 from ple import PLE
 import ple.games
 
-from core import DiscreteEnvironment, Observation, Action
+from core import State, Action, FiniteActionEnvironment
 
 """
     Flappy Bird Environment wrapper for PyGame Learning Environment's Flappy Bird
@@ -13,22 +13,22 @@ from core import DiscreteEnvironment, Observation, Action
 pygame.init()
 
 
-class FlappyBirdObservation(Observation):
+class FlappyBirdState(State):
     """
-        Flappy Bird Observation
+        Flappy Bird State
     """
 
-    def __init__(self, observation: dict, terminal: bool):
+    def __init__(self, state: dict, terminal: bool):
         """
-        Create a new Flappy Bird Observation
-        :param observation: a dictionary containing an observation
+        Create a new Flappy Bird State
+        :param state: a dictionary containing an state
         :param terminal: a boolean indicating whether the environment state is terminal
         """
         super().__init__(terminal)
-        self.observation = observation
+        self.state = state
 
     def __str__(self) -> str:
-        return str(self.observation)
+        return str(self.state)
 
 
 class FlappyBirdAction(Action):
@@ -36,25 +36,28 @@ class FlappyBirdAction(Action):
         Flappy Bird Action that can be performed on the environment state
     """
 
-    def __init__(self, key):
-        """
-        Create a new Flappy Bird Action
-        :param key: PyGame key that corresponds to performing the action
-        """
-        self.key = key
+    def __init__(self, flap: bool):
+        self._flap = flap
+
+    def flap(self):
+        return self._flap
 
 
-class FlappyBird(DiscreteEnvironment):
+class FlappyBird(FiniteActionEnvironment):
     """
         FlappyBird Environment class
     """
+
+    FLAP = FlappyBirdAction(True)
+    REST = FlappyBirdAction(False)
+    ACTIONS = [REST, FLAP]
 
     def __init__(self, size: tuple = (48, 48)):
         """
         Create a new Flappy Bird Environment
         :param size: Game window dimensions
         """
-        super().__init__(FlappyBirdObservation, FlappyBirdAction)
+        super().__init__()
         self.width, self.height = size
         self.game = ple.games.FlappyBird(width=self.width, height=self.height)
         self.game.screen = pygame.display.set_mode(self.game.getScreenDims(), 0, 32)
@@ -67,43 +70,51 @@ class FlappyBird(DiscreteEnvironment):
         self.ple = PLE(self.game)
         self.ple.init()
 
-        flap = FlappyBirdAction(pygame.K_w)
-        rest = FlappyBirdAction(self.ple.NOOP)
-        self._actions = [rest, flap]
-
         self.terminal = False
         self.reset()
+
+    @staticmethod
+    def action_space() -> list:
+        return list(FlappyBird.ACTIONS)
+
+    @staticmethod
+    def valid_actions_from(state) -> list:
+        return FlappyBird.action_space()
 
     def step(self, action: FlappyBirdAction) -> tuple:
         """
         Perform an action on the current environment state
         :param action: The action to be performed
-        :return: A two-tuple of (observation, reward)
+        :return: A two-tuple of (state, reward)
         """
         if self.terminal:
             raise Exception('Cannot perform action on terminal state!')
 
-        reward = self.ple.act(action.key)
-        observation = self.game.getGameState()
+        if action.flap():
+            key = pygame.K_w
+        else:
+            key = self.ple.NOOP
+        reward = self.ple.act(key)
+        state = self.game.getGameState()
         self.terminal = self.ple.game_over()
         pygame.display.update()
-        return FlappyBirdObservation(observation, self.terminal), reward
+        return FlappyBirdState(state, self.terminal), reward
 
     def reset(self):
         """
         Reset the environment state
-        :return: A state containing the initial observation
+        :return: A state containing the initial state
         """
         self.ple.reset_game()
-        observation = self.game.getGameState()
+        state = self.game.getGameState()
         self.terminal = self.ple.game_over()
-        return FlappyBirdObservation(observation, self.terminal)
+        return FlappyBirdState(state, self.terminal)
 
     def valid_actions(self) -> list:
         """
         :return: A list of actions that can be performed on the current environment state
         """
-        return list(self._actions)  # Actions independent of state
+        return self.action_space()
 
 
 if __name__ == '__main__':

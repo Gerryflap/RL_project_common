@@ -9,7 +9,7 @@ class QNetwork(QEstimator):
         Deep Q-Network class that wraps around a suitable Keras model
     """
 
-    def __init__(self, model: ks.models.Model, out_map: list, feature_ex: callable=lambda x: x, gamma: float=1.0):
+    def __init__(self, model: ks.Model, out_map: list, feature_ex: callable=lambda x: x, gamma: float=1.0):
         """
         Create a new Deep Q-Network
         :param model: Keras model to be used in the network
@@ -23,26 +23,26 @@ class QNetwork(QEstimator):
         self.out_map = out_map
         self.gamma = gamma
 
-    def Q(self, observation, action) -> float:
+    def Q(self, state, action) -> float:
         """
-        Predict a Q value for the observation action pair
-        :param observation: The observation parameter
+        Predict a Q value for the state action pair
+        :param state: The state parameter
         :param action: The action parameter
         :return: Q(s, a)
         """
-        out = self.model.predict([self.phi(observation)])[0]    # Predict Q for the transformed state and all actions
+        out = self.model.predict([self.phi(state)])[0]    # Predict Q for the transformed state and all actions
         return out[self.out_map.index(action)]                  # Return the relevant Q value
 
-    def Qs(self, observation, actions=None) -> dict:
+    def Qs(self, state, actions=None) -> dict:
         """
-        Predict the Q values for all actions that can be performed from a state/observation
-        :param observation: The observation parameter
+        Predict the Q values for all actions that can be performed from a state
+        :param state: The state parameter
         :param actions: Optional list of allowed actions that the result should be restricted to.
                         If left unspecified, all actions in the action space are given
         :return: A dictionary mapping all actions to their expected Q value
         """
         pi = dict()
-        for i, v in enumerate(self.model.predict([self.phi(observation)])[0]):  # Perform a forward pass in the network
+        for i, v in enumerate(self.model.predict([self.phi(state)])[0]):  # Perform a forward pass in the network
             pi[self.out_map[i]] = v                                             # Map actions to their predicted Q-value
         if actions is None:
             return pi

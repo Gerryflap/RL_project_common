@@ -1,6 +1,6 @@
 import random
 
-from core import DiscreteEnvironment, Observation, Action
+from core import State, Action, FiniteActionEnvironment
 
 '''
     Easy21 environment implementation as defined in 
@@ -9,14 +9,14 @@ from core import DiscreteEnvironment, Observation, Action
 '''
 
 
-class Easy21Observation(Observation):
+class Easy21State(State):
     """
-        Easy21 Environment Observation
+        Easy21 Environment State
     """
 
     def __init__(self, p_sum: int, d_sum: int, terminal: bool):
         """
-        Create a new Easy21 observation
+        Create a new Easy21 state
         :param p_sum: The player score
         :param d_sum: The dealer score
         :param terminal: A boolean indicating whether the game is over
@@ -36,7 +36,7 @@ class Easy21Observation(Observation):
         :param other: Object to compare this state with
         :return: Whether the specified object is equal to this state
         """
-        if not isinstance(other, Easy21Observation):
+        if not isinstance(other, Easy21State):
             return False
         else:
             return self.p_sum == other.p_sum and \
@@ -71,26 +71,40 @@ class Easy21Action(Action):
     def __repr__(self):
         return str(self)
 
+    def __eq__(self, other):
+        return isinstance(other, Easy21Action) and self.hit is other.hit
 
-class Easy21(DiscreteEnvironment):
+    def __hash__(self):
+        return 1 if self.hit is 'hit' else 0
+
+
+class Easy21(FiniteActionEnvironment):
     """
         Easy21 Environment class
     """
+
+    HIT = Easy21Action(True)
+    STICK = Easy21Action(False)
+    ACTIONS = [HIT, STICK]
 
     def __init__(self, p_red: float = 1 / 3):
         """
         Create a new Easy21 environment
         :param p_red: The probability of drawing a red card
         """
-        super().__init__(Easy21Observation, Easy21Action)
+        super().__init__()
         assert 0 <= p_red <= 1
         self.p_red = p_red
 
-        hit = Easy21Action(True)
-        stick = Easy21Action(False)
-        self._actions = [stick, hit]
-
         self.p_sum, self.d_sum, self.terminal = self._draw_init_state()
+
+    @staticmethod
+    def action_space() -> list:
+        return list(Easy21.ACTIONS)
+
+    @staticmethod
+    def valid_actions_from(state) -> list:
+        return Easy21.action_space()
 
     @property
     def state(self) -> tuple:
@@ -177,7 +191,7 @@ class Easy21(DiscreteEnvironment):
         """
         Perform an action on the environment state
         :param action: The action to be performed
-        :return: A two-tuple of (observation, reward)
+        :return: A two-tuple of (state, reward)
         """
         if self.terminal:
             raise Exception('Cannot perform action on terminal state!')
@@ -188,21 +202,18 @@ class Easy21(DiscreteEnvironment):
             while self._valid_score(self.d_sum) and self.d_sum < 17:            # - While dealer sum is below 17
                 self.d_sum += self._card_value(self._draw_card())               # - Keep drawing cards
             self.terminal = True                                                # - End game
-        return Easy21Observation(*self.state), self._reward(*self.state)        # Return observation and reward
+        return Easy21State(*self.state), self._reward(*self.state)              # Return state and reward
 
-    def reset(self) -> Easy21Observation:
+    def reset(self) -> Easy21State:
         """
         Reset the environment state
-        :return: an initial observation
+        :return: an initial state
         """
         self.p_sum, self.d_sum, self.terminal = self._draw_init_state()
-        return Easy21Observation(*self.state)
+        return Easy21State(*self.state)
 
     def valid_actions(self) -> list:
-        """
-        :return: A list of actions that can be performed on the current environment state
-        """
-        return list(self._actions)
+        return Easy21.action_space()
 
 
 if __name__ == '__main__':
