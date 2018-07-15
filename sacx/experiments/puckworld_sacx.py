@@ -1,15 +1,12 @@
 import core
-from sacx.gerben.sacq import SACQ
+from sacx.sacq import SACQ
 
 if __name__ == '__main__':
     import keras as ks
     import numpy as np
     from sacx.puckworld import PuckWorld
-    from environments.wrappers.MultiTaskWrapper import MultiTaskWrapper
-    from sacx.gerben.tasked_q_network import QNetwork
-    from sacx.gerben.tasked_p_network import PolicyNetwork
-    from sacx.gerben.sacu import SACU
-    from sacx.gerben.extcore import Task
+    from sacx.tasked_q_network import QNetwork
+    from sacx.tasked_p_network import PolicyNetwork
     from sacx.multi_task_logger import PlottingMultiTaskLogger
 
     width, height = size = 400, 400
