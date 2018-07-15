@@ -1,3 +1,7 @@
+"""
+    An implementation of SAC-Q, written on top of the SAC-U implementation
+"""
+
 from collections import defaultdict
 
 from policy import GreedyPolicy, BoltzmannPolicy
@@ -28,6 +32,9 @@ class SACQ(SACU):
             R = sum([r * self.gamma**k for k, r in enumerate(main_rewards[h*xi:])])
             self.M[Tau[h]] += 1
             #self.Q[tuple(Tau[:h]), Tau[h]] += (R - self.Q[tuple(Tau[:h]), Tau[h]])/self.M[Tau[h]]
+
+            # We used a Q-Table with 0.1 learning rate to update the values in the table.
+            # Change 0.1 to the desired learning rate
             self.Q[tuple(Tau[:h]), Tau[h]] += 0.1 * (R - self.Q[tuple(Tau[:h]), Tau[h]])
 
     def schedule_task(self, Tau):
