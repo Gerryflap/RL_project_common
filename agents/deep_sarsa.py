@@ -8,6 +8,11 @@ from q_network_sarsa_lambda import QNetworkSL
 
 
 class DeepSarsa(Agent):
+    """
+    An implementation of Deep SARSA(λ).
+
+    The implementation is an extension on Deep Q Networks (DQN by Deepmind), using SARSA(λ) instead of TD(0).
+    """
 
     def __init__(self,
                  env: FiniteActionEnvironment,
@@ -18,6 +23,16 @@ class DeepSarsa(Agent):
                  epsilon_step_factor=1.0,
                  epsilon_min=0.0
                  ):
+        """
+        Initialized the Deep SARSA(λ) agent
+        :param env: The FiniteActionEnvironment that should be learned by the agent
+        :param model: The function approximator used to estimate and learn Q(s,a)
+        :param replay_memory_size: The size of the replay memory (in trajectories)
+        :param minibatch_size: The size of the minibatches sampled from the raply memory each step for training
+        :param epsilon: The probability of performing a random move, used for exploration
+        :param epsilon_step_factor: The epsilon decay parameter. Epsilon is multiplied each step with this factor.
+        :param epsilon_min: The minimum value of epsilon. It will not decay further than this.
+        """
         super().__init__(env)
         self.epsilon_step_factor = epsilon_step_factor
         self.epsilon_min = epsilon_min
@@ -30,10 +45,14 @@ class DeepSarsa(Agent):
         self.minibatch_size = minibatch_size
 
     def learn(self, num_episodes: int=1000000, result_handler=None) -> EpsilonGreedyPolicy:
+        """
+        Train the Q-Network
+        :param num_episodes: Number of episodes that should be run
+        :return: A policy derived from the trained Q network
+        """
         Q, pi = self.qnetwork, self.policy
         for i in range(num_episodes):
             s = self.env.reset()
-            # print(self.qnetwork.Q_array(np.zeros((1,4)))) # I don't know who hardcoded the size, but they are retarded
             r_sum = 0
             trajectory = []
             

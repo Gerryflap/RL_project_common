@@ -6,6 +6,10 @@
 
 
 def run_a2c_experiment(entropy_reg):
+    """
+    This function runs a single run of a2c on cartpole using the specified parameters
+    :param entropy_reg: Entropy regularization on the policy loss function, higher means a more random policy
+    """
     import keras as ks
     import numpy as np
     from agents.actor_critic import ActorCriticAgent
@@ -60,6 +64,12 @@ def run_a2c_experiment(entropy_reg):
 
 
 def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay):
+    """
+    Runs deep sarasa lambda on cartpole
+    :param epsilon_start: Starting epsilon value
+    :param epsilon_min: Minimum epsilon value
+    :param epsilon_decay: Factor multiplied with epsilon each step
+    """
     import keras as ks
     import numpy as np
     from agents.deep_sarsa import DeepSarsa
@@ -98,6 +108,13 @@ def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay):
 
 if __name__ == "__main__":
     import multiprocessing as mp
+
+
+    """
+    Below is a list of functions that run the experiment.
+    Each experiment is run once.
+    More experiments can be added to try different parameters.
+    """
     experiments = [
         # lambda: run_a2c_experiment(0.01),
         # lambda: run_a2c_experiment(0.1),

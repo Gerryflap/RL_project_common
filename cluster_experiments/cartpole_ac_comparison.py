@@ -5,7 +5,12 @@
 """
 
 
-def run_a2c_experiment(entropy_reg, run):
+def run_a2c_experiment(entropy_reg, run: int):
+    """
+    This function runs a single run of a2c on cartpole using the specified parameters
+    :param entropy_reg: Entropy regularization on the policy loss function, higher means a more random policy
+    :param run: Specifies the run number, this is used in the filename of the output file
+    """
     import keras as ks
     import numpy as np
     from agents.actor_critic import ActorCriticAgent
@@ -59,7 +64,15 @@ def run_a2c_experiment(entropy_reg, run):
     q = ac.learn(num_episodes=250, result_handler=experiment.log)
 
 
-def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay, run):
+def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay, run: int):
+    """
+    Runs deep sarasa lambda on cartpole
+    :param epsilon_start: Starting epsilon value
+    :param epsilon_min: Minimum epsilon value
+    :param epsilon_decay: Factor multiplied with epsilon each step
+    :param run: Run identifier used in the output filename
+    :return:
+    """
 
     import keras as ks
     import numpy as np
@@ -99,11 +112,20 @@ def run_saraslambda_experiment(epsilon_start, epsilon_min, epsilon_decay, run):
 
 if __name__ == "__main__":
     import multiprocessing as mp
+
+    """
+    Below is a list of functions that take a run number and run the experiment.
+    Each of these experiment configurations is run many times in the loop below the list.
+    More experiments can be added to try different parameters.
+    """
+
     experiments = [
         lambda r: run_a2c_experiment(0.01, r),
         lambda r: run_saraslambda_experiment(1.0, 0.00, 0.999, r),
     ]
 
     for experiment in experiments:
+        # Change 25 here to the desired number of runs per experiment,
+        #   keep in mind that every run launches a separate process
         for run in range(25):
             mp.Process(target=experiment, args=(run,)).start()
