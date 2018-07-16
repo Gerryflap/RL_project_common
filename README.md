@@ -36,9 +36,5 @@ python -m cluster_experiments.cartpole_sarsa_lambda
 
 Results and configuration are logged to `results/<filename>.h5`, where the filename depends on the experiment. Depending on how logging is used in the experiment, the log file contains results for multiple runs and parameters of the experiment. As an example for how the log files can be read, see the scripts in `/plots`  
 
-## Explanation of the folders:
-
-### Agents
-The agents folder contains all agents
 
 
