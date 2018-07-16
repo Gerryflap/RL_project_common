@@ -1,5 +1,7 @@
 import matplotlib.pyplot as plt
-
+"""
+    Defines a logging framework for logging in multi task environments
+"""
 
 class MultiTaskLogger(object):
     def log(self, trajectory, tasks):

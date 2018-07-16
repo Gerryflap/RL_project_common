@@ -8,10 +8,10 @@ from collections import deque
 
 import numpy as np
 
-from core import FiniteActionEnvironment, State, Action
-from sacx.extcore import TaskEnvironment, Task
-from sacx.gerben.tasked_p_network import PolicyNetwork
-from sacx.gerben.tasked_q_network import QNetwork
+from core import FiniteActionEnvironment
+from sacx.extcore import TaskEnvironment
+from sacx.tasked_p_network import PolicyNetwork
+from sacx.tasked_q_network import QNetwork
 
 
 class SACU(object):

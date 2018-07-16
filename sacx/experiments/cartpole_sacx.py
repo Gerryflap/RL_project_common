@@ -2,13 +2,12 @@ from sacx.multi_task_logger import PlottingMultiTaskLogger
 
 if __name__ == '__main__':
     import keras as ks
-    import numpy as np
     from environments.cartpole import CartPole
     from environments.wrappers.MultiTaskWrapper import MultiTaskWrapper
-    from sacx.gerben.tasked_q_network import QNetwork
-    from sacx.gerben.tasked_p_network import PolicyNetwork
-    from sacx.gerben.sacu import SACU
-    from sacx.gerben.extcore import Task
+    from sacx.tasked_q_network import QNetwork
+    from sacx.tasked_p_network import PolicyNetwork
+    from sacx.sacu import SACU
+    from sacx.extcore import Task
 
     senv = CartPole(render=True)
     tasks = [Task("MAIN_TASK")]

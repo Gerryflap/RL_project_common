@@ -3,14 +3,10 @@ from sacx.multi_task_logger import PlottingMultiTaskLogger
 
 if __name__ == '__main__':
     import keras as ks
-    import numpy as np
-    from sacx.gerben.environments.mountaincar import MountainCar
-    from environments.wrappers.MultiTaskWrapper import MultiTaskWrapper
-    from sacx.gerben.tasked_q_network import QNetwork
-    from sacx.gerben.tasked_p_network import PolicyNetwork
-    from sacx.gerben.sacu import SACU
-    from sacx.gerben.sacq import SACQ
-    from sacx.gerben.extcore import Task
+    from sacx.environments.mountaincar import MountainCar
+    from sacx.tasked_q_network import QNetwork
+    from sacx.tasked_p_network import PolicyNetwork
+    from sacx.sacq import SACQ
 
     env = MountainCar()
 

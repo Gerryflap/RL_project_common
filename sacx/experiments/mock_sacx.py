@@ -2,13 +2,10 @@ import core
 
 if __name__ == '__main__':
     import keras as ks
-    import numpy as np
-    from sacx.gerben.environments.mock_env import MockEnv
-    from environments.wrappers.MultiTaskWrapper import MultiTaskWrapper
-    from sacx.gerben.tasked_q_network import QNetwork
-    from sacx.gerben.tasked_p_network import PolicyNetwork
-    from sacx.gerben.sacu import SACU
-    from sacx.gerben.extcore import Task
+    from sacx.environments.mock_env import MockEnv
+    from sacx.tasked_q_network import QNetwork
+    from sacx.tasked_p_network import PolicyNetwork
+    from sacx.sacu import SACU
 
     env = MockEnv()
 

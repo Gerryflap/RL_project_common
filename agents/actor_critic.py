@@ -2,7 +2,7 @@
     An implementation of an Actor Critic Agent
 
     Q returns calculated using: Sarsa-λ
-    Policy is updated by maximizing π(s) * ( Q(s, θ') - α*log(π(s) ) or using the A2C/A3C formula and advantage
+    Policy is updated by maximizing π(s) * ( Q(s, θ') - α*log(π(s) ) or using Advantage Actor Critic
 
 """
 from collections import deque

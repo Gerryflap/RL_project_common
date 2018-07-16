@@ -1,5 +1,5 @@
 import numpy as np
-import sacx.gerben.generic_tasked_q_network as genq
+import sacx.generic_tasked_q_network as genq
 
 
 class QNetwork(genq.QNetwork):
