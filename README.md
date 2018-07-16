@@ -13,7 +13,18 @@ These algorithms were evaluated in multiple experiments.
 The experiments used in the paper are all in the folder ```cluster_experiments```, 
 apart from the SAC-Q experiment which resides in ```sacx/experiments/mountaincar.py```.
 
+
+## Dependencies
+In order to run the experiments a number of different Python packages are required, including Tensorflow, Keras, Numpy, Matplotlib, H5py and Pandas. Alternatively an environment that contains all dependencies can be installed using Conda:
+
+```
+conda create --name rl --file requirements.txt
+```
+
+
 ## Explanation of the folders:
 
 ### Agents
 The agents folder contains all agents
+
+
