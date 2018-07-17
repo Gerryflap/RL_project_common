@@ -13,6 +13,9 @@ These algorithms were evaluated in multiple experiments.
 The experiments used in the paper are all in the folder ```cluster_experiments```, 
 apart from the SAC-Q experiment which resides in ```sacx/experiments/mountaincar.py```.
 
+If you wish to read and gain a more in-depth understanding of these algorithyms, we invite you to read the report or peruse the assosiated slides:
+- [Report](../blob/master/methods-deep-reinforcement.pdf)
+- [Slides](../blob/master/MethodsForDeepRL-Slides.pdf)
 
 ## Dependencies
 In order to run the experiments a number of different Python packages are required, including Tensorflow, Keras, Numpy, Matplotlib, H5py and Pandas. Alternatively an environment that contains all dependencies can be installed using Conda:
@@ -25,6 +28,12 @@ The environment containing the dependencies can then be activated using:
 ```
 source activate rl
 ```
+## Environments
+You may find that you need to install the environments seperately depending on which experiments you plan on running. The environments used within the experiments here are either [gym](http://gym.openai.com/) environments, [PLE](http://pygame-learning-environment.readthedocs.io/en/latest/), or the snake environment.
+
+The gym and PLE environments can be installed with your favoriate package manager and the snake environement can be found [here](https://github.com/av80r/Gym-Snake).
+
+ If you wish to run the agents against a different environment, this is a relatively trivial task. You need to write a wrapper like those that can be found in the environments folder and supply the state and action spaces.
 
 
 ## Running experiments
