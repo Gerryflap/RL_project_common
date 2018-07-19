@@ -17,6 +17,15 @@ If you wish to read and gain a more in-depth understanding of these algorithyms,
 - [Report](../master/methods-deep-reinforcement.pdf)
 - [Slides](../master/MethodsForDeepRL-Slides.pdf)
 
+## Some shiny gifs
+Cart Pole:
+
+![alt-text](../master/gifs/cart_pole.gif "Cart Pole")
+
+Snake:
+
+![alt text](../master/gifs/snake.gif "CNN snake")
+
 ## Dependencies
 In order to run the experiments a number of different Python packages are required, including Tensorflow, Keras, Numpy, Matplotlib, H5py and Pandas. Alternatively an environment that contains all dependencies can be installed using Conda:
 
